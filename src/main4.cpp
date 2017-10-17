@@ -411,6 +411,8 @@ struct SApp : AppBasic {
 				//"lum = pow(lum, 2.0);"
 				//"_out = fetch3(tex2, vec2(lum, 0.0));" // fetch end of gradient (yellow)
 				"float c = lum;"
+				"c /= c + 1.0;"
+				// this is taken from https://www.shadertoy.com/view/Mld3Rn
 				"_out = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
 				""
 				//"_out = invLumReinhard(_out);", ShadeOpts(), sh_invLumReinhard
