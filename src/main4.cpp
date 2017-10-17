@@ -289,30 +289,6 @@ struct SApp : AppBasic {
 		
 			auto tex = gtex(img5);
 
-			/*tex = shade2(tex, "float f=fetch1(); vec3 c = vec3(1.0);"
-				"c*=30.0*exp(-f*5.0*vec3(.8,.6,.5));"
-				//"c += vec3(.5, .7, .9) * f * f * .2;"
-				"_out=c;", ShadeOpts().ifmt(GL_RGB16F));*/
-			/*string getN =
-				Str()
-				<< "vec3 getN(sampler2D tex_) {"
-				<< "	float aL = texture2D(tex_, tc + tsize * vec2(-1.0, 0.0)).x;"
-				<< "	float aR = texture2D(tex_, tc + tsize * vec2(+1.0, 0.0)).x;"
-				<< "	float aU = texture2D(tex_, tc + tsize * vec2(0.0, -1.0)).x;"
-				<< "	float aD = texture2D(tex_, tc + tsize * vec2(0.0, +1.0)).x;"
-				<< "	float dx = (aR - aL)/2.0;"
-				<< "	float dy = (aD - aU)/2.0;"
-				<< "	return normalize(vec3(-dx, -dy, -1.0));"
-				<< "}";*/
-			/*
-			"vec3 N=normalize(cross("
-			"	vec3(1.0,0.0,g.x),"
-			"	vec3(1.0,g.y,0.0)"
-			"));"
-			"vec3 I=-normalize(vec3(tc.x-.5, tc.y-.5, 1.0));"
-			"float eta=.9;"
-			"vec3 R=refract(I, N, eta);"
-			*/
 			static auto envMap = gl::Texture(ci::loadImage("envmap2.png"));
 			//static auto envMap = gtex(loadRgbeFile("envmap.hdr"));
 			globaldict["surfTensionThres"] = surfTensionThres;
@@ -325,7 +301,6 @@ struct SApp : AppBasic {
 				);
 			//auto tex2b = gpuBlur2_4::run(tex2, 2, 2); // this is the slow part.
 			auto laplacetexB = gpuBlur2_4::run_longtail(laplacetex, 5, 1.0f);
-			//gl::draw(laplacetexB, getWindowBounds());
 			auto laplacetexSum = shade2(laplacetex, laplacetexB,
 				"_out = fetch3(tex) + fetch3(tex2);"
 				);
@@ -385,9 +360,9 @@ struct SApp : AppBasic {
 				//"	c = 5.0*pow(c, vec3(2.0));"
 				"	c = pow(c, vec3(2.2));" // gamma correction
 				//"	c=smoothstep(vec3(0.0),vec3(1.0),c);"
-				"	float clum=dot(c, w);"
-				"	c *= pow(clum,1.0);" // make it darker
-				"	c/=vec3(1.0)-c*.99; c*=1.0;"
+				//"	float clum=dot(c, w);"
+				//"	c *= pow(clum,1.0);" // make it darker
+				//"	c/=vec3(1.0)-c*.99; c*=1.0;"
 				"	return c;"
 				"}\n"
 				);
