@@ -197,18 +197,6 @@ struct SApp : AppBasic {
 			tmpEnergy=gauss3(tmpEnergy);
 			});
 
-			///////////////////// NEWCODE
-			/*
-			auto imgb = gauss3(img);
-			auto imgbDiff = Array2D<float>(sx, sy);
-			forxy(imgb)
-			{
-				imgbDiff(p) = imgb(p) - img(p);
-			}
-			//forxy(imgb)
-			*/
-			/////////////////////
-
 			auto img_b = img.clone();
 			sw::timeit("surftension&incompressibility [blurs]", [&]() {
 				//for(int i = 0; i < 4; i++)
@@ -276,11 +264,6 @@ struct SApp : AppBasic {
 			}
 			});
 			
-			/*forxy(tmpEnergy)
-			{
-				tmpEnergy(p) *= 0.0f;
-			}*/
-
 			if(mouseDown_[0])
 			{
 				Vec2f scaledm = Vec2f(mouseX * (float)sx, mouseY * (float)sy);
@@ -368,16 +351,8 @@ struct SApp : AppBasic {
 			"vec3 R=refract(I, N, eta);"
 			*/
 			static auto envMap = gl::Texture(ci::loadImage("envmap2.png"));
-			static auto gradientMap = gl::Texture(ci::loadImage("gradientmap.png"));
 			//static auto envMap = gtex(loadRgbeFile("envmap.hdr"));
 			globaldict["surfTensionThres"] = surfTensionThres;
-
-			// the following gives us a sharp refracting boundary and also lets us check for ==0.0 where we reflect.
-			/*tex = shade2(tex,
-				"float f=fetch1();"
-				"f-=surfTensionThres;"
-				"if(f<0.0) f=0.0;"
-				"_out=vec3(f);");*/
 
 			auto laplacetex = get_laplace_tex(tex);
 
@@ -392,33 +367,15 @@ struct SApp : AppBasic {
 				"_out = fetch3(tex) + fetch3(tex2);"
 				);
 
-			string sh_invLumReinhard =
-				"vec3 invLumReinhard(vec3 c) {"
-				"	vec3 w = vec3(.22, .71, .07);"
-				"	float lum = dot(c, w);"
-				"	c /= lum;"
-				"	c *= lum / (1.0-.99*lum);"
-				"	return c;"
-				"}";
-
-			auto grads = get_gradients_tex(tex);
-			// gradient-map the bloom tex
-			auto laplaceBGradientmapped = shade2(laplacetexSum, gradientMap,
-				"float laplace = fetch1(tex);"
-				"float lum=laplace;" // backcompat
-				//"lum *= 5.0;" // so the brightest laplace places have lum 1 (otherwise they have lum 10 cause we multiply after the gradientfetch);
-				//"lum /= lum+1.0;"
-				//"lum = pow(lum, 2.0);"
-				//"_out = fetch3(tex2, vec2(lum, 0.0));" // fetch end of gradient (yellow)
-				"float c = lum;"
+			auto laplaceBGradientmapped = shade2(laplacetexSum,
+				"float c = fetch1();"
 				"c /= c + 1.0;"
 				// this is taken from https://www.shadertoy.com/view/Mld3Rn
 				"_out = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
-				""
-				//"_out = invLumReinhard(_out);", ShadeOpts(), sh_invLumReinhard
 				);
-			//gl::draw(laplaceBGradientmapped, getWindowBounds());
 			
+			auto grads = get_gradients_tex(tex);
+
 			// WHAT I'M WORKING ON - fresnel. So I'm debugging it with drawing vec3(dot(N, I)).
 			auto tex2 = shade2(tex, grads, envMap, laplaceBGradientmapped,
 				"vec2 grad = fetch2(tex2);"
