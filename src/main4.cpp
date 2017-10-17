@@ -2,8 +2,6 @@
 #if 1
 #include "ciextra.h"
 #include "util.h"
-//#include <boost/typeof/typeof.hpp>
-//#include <boost/assign.hpp>
 #include "stuff.h"
 #include "shade.h"
 #include "gpgpu.h"
@@ -51,11 +49,6 @@ struct SApp : AppBasic {
 		glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);
 		gtexfmt.setInternalFormat(hdrFormat);
 		setWindowSize(wsx, wsy);
-
-		forxy(img)
-		{
-			//img(p) = ci::randFloat(); // NEWCODE
-		}
 
 		tmpEnergy = Array2D<Vec2f>(sx, sy);
 	}
@@ -105,10 +98,6 @@ struct SApp : AppBasic {
 		direction = getMousePos() - lastm;
 		lastm = getMousePos();
 	}
-	Vec2f reflect(Vec2f const & I, Vec2f const & N)
-	{
-		return I - N * N.dot(I) * 2.0f;
-	}
 	Array2D<float> img3;
 	Array2D<Vec2f> tmpEnergy3;
 	Array2D<Vec2f> tmpEnergy;
@@ -131,43 +120,18 @@ struct SApp : AppBasic {
 		}
 	}
 
-	void moveMatter(Vec2i p, Vec2f p2, float movedMatter, Vec2f transferredEnergy, Vec2f vec2)
-	{
-		aaPoint_i2(img3, p, -movedMatter);
-		aaPoint2(img3, p2, movedMatter);
-		
-		aaPoint_i2(tmpEnergy3, p, -transferredEnergy);
-		if(area.contains(Vec2f(p) + vec2))
-			aaPoint2(tmpEnergy3, p2, transferredEnergy);
-	}
-
-	/*string tmsg;
-	void tnext(string msg)
-	{
-		tmsg = msg;
-	}*/
 	void draw()
 	{
 		my_console::beginFrame();
 		sw::beginFrame();
 		static bool first = true;
-		if(first) { globaldict["ltm"] = 0.0f; globaldict["mul"] = 1.0f; mouseY = .4f; }
-		globaldict_default("mul2", 1.0f);
+		if(first) { mouseY = .4f; }
 		first = false;
 
 		wsx = getWindowSize().x;
 		wsy = getWindowSize().y;
 
 		mouseX = getMousePos().x / (float)wsx;
-		//if(keys['x']) {
-		//	globaldict["ltm"] = sgn(mouseX) * exp(lmap(abs(mouseX), 0.0f, .3f, log(.001f), log(10.0f)));
-		//}
-		/*if(keys['y']) {
-			globaldict["mul"] = mouseY;
-		}
-		if(keys['u']) {
-			globaldict["mul2"] = mouseY;
-		}*/
 		auto surfTensionThres=cfg1::getOpt("surfTensionThres", .5f,
 			[&]() { return keys['6']; },
 			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
@@ -188,7 +152,6 @@ struct SApp : AppBasic {
 		{
 			forxy(velocity)
 			{
-				//velocity(p) += Vec2f(0.0f, gravity);
 				tmpEnergy(p) += Vec2f(0.0f, gravity) * img(p);
 			}
 
@@ -395,15 +358,9 @@ struct SApp : AppBasic {
 				"if(fetch1(tex) > surfTensionThres)"
 				"	c += getEnv(R) * fresnelAmount * 10.0;" // *10.0 to tmp simulate one side of the envmap being brighter than the other
 				
-				//"c += vec3(1.0, 0.0, 0.0) * max(fetch1(tex4), 0.0) * 10.0;"
 				"vec3 laplaceShadedB = fetch3(tex4);"
-				//"c = N*.5+0.5;"
-				//"c = vec3(dot(N, I));"
-				"c += laplaceShadedB;" // TMP COMMENTED OUT
-				//"c += fetch1(tex) * vec3(1.0, 0.0, 0.0);"
+				"c += laplaceShadedB;"
 				
-				//"if(fetch1(tex) <= surfTensionThres)"
-				//"	c = vec3(0.0);"
 				"_out = c;"
 				, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f),
 				"float PI = 3.14159265358979323846264;\n"
@@ -434,25 +391,6 @@ struct SApp : AppBasic {
 				"	return c;"
 				"}\n"
 				);
-			/*tex2 = shade2(tex2, tex2b,
-				"_out = fetch3(tex) + fetch3(tex2);"
-				);*/
-
-			/*tex2 = shade2(tex2,
-				"vec3 c = fetch3(tex);"
-				"vec3 hcl = RGB2HCL(c);"
-				"c = HCL2RGB(hcl);"
-				"_out = c;"
-				, ShadeOpts(), ntLoadFile("hcl_lib.fs"));*/
-
-			if(0) tex2 = shade2(tex2,
-				"vec3 c = fetch3();"
-				"vec3 w = vec3(.22, .71, .07);"
-				"float lum = dot(c, w);"
-				"c /= lum;"
-				"c *= lum / (lum+1.0);"
-				"_out = c;"
-				);
 
 			// vignetting
 			if(0) tex2 = shade2(tex2,
@@ -468,36 +406,6 @@ struct SApp : AppBasic {
 				"c /= vec3(1.0) - c;"
 				"_out=c;"
 				,ShadeOpts().scale(1.0f/::scale));
-
-			// chromaclip
-			/*tex2 = shade2(tex2,
-				"vec3 c = fetch3();"
-				"vec3 w = vec3(.22, .71, .07);"
-				"float lum = dot(c, w);"
-				"vec3 achrom=vec3(lum);"
-				"c = mix(c, achrom, pow(lum/(lum+10.0),1.0));"
-				"_out = c;"
-				);*/
-
-			// postbloom
-			if(0){
-				auto tex2b = gpuBlur2_4::run(tex2, 2, 1);
-				tex2 = shade2(tex2, tex2b,
-					"_out = fetch3(tex) + fetch3(tex2);"
-					);
-			}
-			// local tonemap
-			if(0){
-				//tex2 = shade2(tex2, "_out = log(fetch3());");
-				auto tex2b = gpuBlur2_4::run(tex2, 2, 1);
-				tex2 = shade2(tex2, tex2b,
-					"vec3 cb = fetch3(tex2);"
-					"vec3 w = vec3(.22, .71, .07);"
-					"float lum = dot(cb, w);"
-					"_out = .2*fetch3(tex) / lum;"
-					);
-				//tex2 = shade2(tex2, "_out = exp(fetch3());");
-			}
 
 			tex2 = shade2(tex2,
 				"vec3 c = fetch3(tex);"
@@ -527,14 +435,8 @@ struct SApp : AppBasic {
 			"_out=c;"
 			"}");
 #endif
-		/*auto tex6 = shade(list_of(gtex(img))(gtex(colormap)), "void shade() { float y=fetch1();"
-			//"y /= y + 1.0;"
-			"_out= min(1.0, y * 30.0) * fetch3(tex2,vec2(0.0, y));"
-			"}");*/
-		//auto tex6 = gtex(img);
 		
-
-		/*Sleep(50);*/my_console::clr();
+		my_console::clr();
 		cout<<"==============="<<endl;
 		cout<<"min: " << *std::min_element(img.begin(),img.end()) << ", ";
 		cout<<"max: " << *std::max_element(img.begin(),img.end()) << endl;
@@ -558,14 +460,6 @@ struct SApp : AppBasic {
 		if(pause)
 			Sleep(50);
 		//Sleep(5);
-#if 0
-		if(getElapsedFrames()==1){
-			if(!SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS/*BELOW_NORMAL_PRIORITY_CLASS*/))
-			{
-				throw 0;
-			}
-		}
-#endif
 	}
 	// nullTerminatedLoadFile
 	string ntLoadFile(string filename)
@@ -573,16 +467,6 @@ struct SApp : AppBasic {
 		vector<unsigned char> vec;
 		loadFile(vec, filename);
 		return string(vec.begin(), vec.end());
-	}
-	// http://www.asawicki.info/news_1301_reflect_and_refract_functions.html
-	Vec3f refract(const Vec3f &I, const Vec3f &N, float eta)
-	{
-		float N_dot_I = ci::dot(N, I);
-		float k = 1.f - eta * eta * (1.f - N_dot_I * N_dot_I);
-		if (k < 0.f)
-			return Vec3f(0.f, 0.f, 0.f);
-		else
-			return eta * I - (eta * N_dot_I + sqrtf(k)) * N;
 	}
 	void draw(gl::Texture tex, Rectf srcRect, Rectf dstRect)
 	{
