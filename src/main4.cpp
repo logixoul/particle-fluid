@@ -102,24 +102,6 @@ struct SApp : AppBasic {
 	Array2D<Vec2f> tmpEnergy3;
 	Array2D<Vec2f> tmpEnergy;
 
-	void toTmpEnergy()
-	{
-		tmpEnergy = Array2D<Vec2f>(sx, sy);
-		forxy(tmpEnergy)
-		{
-			tmpEnergy(p) = velocity(p) * img(p);
-		}
-	}
-
-	void fromTmpEnergy()
-	{
-		forxy(tmpEnergy)
-		{
-			if(img(p) != 0.0f)
-				velocity(p) = tmpEnergy(p) / img(p);
-		}
-	}
-
 	void draw()
 	{
 		my_console::beginFrame();
@@ -231,7 +213,7 @@ struct SApp : AppBasic {
 			{
 				Vec2f scaledm = Vec2f(mouseX * (float)sx, mouseY * (float)sy);
 				Area a(scaledm, scaledm);
-				int r = 5; //sqrt(800);
+				int r = 5;
 				a.expand(r, r);
 				for(int x = a.x1; x <= a.x2; x++)
 				{
@@ -240,15 +222,14 @@ struct SApp : AppBasic {
 						Vec2f v = Vec2f(x, y) - scaledm;
 						float w = max(0.0f, 1.0f - v.length() / r);
 						w = 3 * w * w - 2 * w * w * w;
-						w=max(0.0f,w);
-						img.wr(x, y) += 1.f * w /** exp(-5.0f + 10.0f * mouseX)*/*10.0;
+						img.wr(x, y) += 1.f * w *10.0;
 					}
 				}
 			} else if(mouseDown_[2]) {
 				mm();
 				Vec2f scaledm = Vec2f(mouseX * (float)sx, mouseY * (float)sy);
 				Area a(scaledm, scaledm);
-				int r = 15; //sqrt(800);
+				int r = 15;
 				a.expand(r, r);
 				for(int x = a.x1; x <= a.x2; x++)
 				{
@@ -258,12 +239,10 @@ struct SApp : AppBasic {
 						float w = max(0.0f, 1.0f - v.length() / r);
 						w = 3 * w * w - 2 * w * w * w;
 						if(img.wr(x, y) != 0.0f)
-							tmpEnergy.wr(x, y) += /*(1.0f / img.wr(x, y)) * */ w * img.wr(x, y) * /*1.2f*/4.0f * direction / (float)scale;
+							tmpEnergy.wr(x, y) += w * img.wr(x, y) * 4.0f * direction / (float)scale;
 					}
 				}
 			}
-
-			//fromTmpEnergy();
 		} // if ! pause
 		sw::timeit("draw", [&]() {
 			float limit = 65504 - 1;
@@ -351,18 +330,12 @@ struct SApp : AppBasic {
 				"\n"
 				"v.y=-v.y;\n"
 				"float phi = atan(v.y, v.x) + PI;\n"
-				//"return vec2(phi / (2.0*PI), theta / (PI/2.0));\n"
 				"return vec2(phi / (2.0*PI), theta / (PI/2.0));\n"
 				"}\n"
 				"vec3 w = vec3(.22, .71, .07);"
 				"vec3 getEnv(vec3 v) {\n"
 				"	vec3 c = fetch3(tex3, latlong(v));\n"
-				//"	c = 5.0*pow(c, vec3(2.0));"
 				"	c = pow(c, vec3(2.2));" // gamma correction
-				//"	c=smoothstep(vec3(0.0),vec3(1.0),c);"
-				//"	float clum=dot(c, w);"
-				//"	c *= pow(clum,1.0);" // make it darker
-				//"	c/=vec3(1.0)-c*.99; c*=1.0;"
 				"	return c;"
 				"}\n"
 				);
@@ -371,10 +344,7 @@ struct SApp : AppBasic {
 			if(0) tex2 = shade2(tex2,
 				"vec3 c = fetch3();"
 				"vec2 tc2 = tc-vec2(.5);"
-				//"c /= 1.0 + pow(length(tc2), 2.0);"
 				"float ndist = length(tc2)/sqrt(.5*.5+.5*.5);" //normalized dist in [0,1]
-				//"c *= pow(1.0-ndist, 3.0);"
-				//"c *= exp(-ndist*ndist*12);"
 				"float att = exp(-ndist*ndist*6);"
 				"c /= c + vec3(1.0);"
 				"c = pow(c, vec3(1.0/att));"
@@ -384,15 +354,8 @@ struct SApp : AppBasic {
 
 			tex2 = shade2(tex2,
 				"vec3 c = fetch3(tex);"
-				//"c = c / (c + vec3(1.0));"
 				"if(c.r<0.0||c.g<0.0||c.b<0.0) { _out = vec3(1.0, 0.0, 0.0); }" // eases debugging
 				"c = pow(c, vec3(1.0/2.2));"
-				/*
-				"c.g = smoothstep(0.0, 1.0, c.g);"
-				"c.b = max(0.0, min(1.0, c.b));"
-				"c.b =1.0-pow(1.0-c.b,2.0);"
-				"c.r = mix(.2, 1.0, c.r);"
-				*/
 				"_out = c;"
 				);
 			gl::draw(tex2, getWindowBounds());
