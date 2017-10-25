@@ -37,9 +37,6 @@ struct SApp : AppBasic {
 		
 	void setup()
 	{
-		//keys2['0']=keys2['1']=keys2['2']=keys2['3']=true;
-		//_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-
 		_controlfp(_DN_FLUSH, _MCW_DN);
 
 		area = Rectf(0, 0, (float)sx-1, (float)sy-1).inflated(Vec2f::zero());
@@ -541,7 +538,6 @@ struct SApp : AppBasic {
 		//auto tex6 = gtex(img);
 		
 
-		/*Sleep(50);*/my_console::clr();
 		cout<<"==============="<<endl;
 		cout<<"min: " << *std::min_element(img.begin(),img.end()) << ", ";
 		cout<<"max: " << *std::max_element(img.begin(),img.end()) << endl;
