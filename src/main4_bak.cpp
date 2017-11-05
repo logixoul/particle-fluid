@@ -23,7 +23,6 @@ Image img(sx, sy);
 Array2D<Vec2f> velocity(sx, sy, Vec2f::zero());
 bool mouseDown_[3];
 bool keys[256];
-gl::Texture::Format gtexfmt;
 
 float mouseX, mouseY;
 bool pause;
@@ -46,7 +45,6 @@ struct SApp : AppBasic {
 		glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE);
 		glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
 		glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);
-		gtexfmt.setInternalFormat(hdrFormat);
 		setWindowSize(wsx, wsy);
 
 		forxy(img)
@@ -101,10 +99,6 @@ struct SApp : AppBasic {
 	{
 		direction = getMousePos() - lastm;
 		lastm = getMousePos();
-	}
-	Vec2f reflect(Vec2f const & I, Vec2f const & N)
-	{
-		return I - N * N.dot(I) * 2.0f;
 	}
 	Array2D<float> img3;
 	Array2D<Vec2f> tmpEnergy3;

@@ -20,7 +20,6 @@ Image img(sx, sy);
 Array2D<Vec2f> velocity(sx, sy, Vec2f::zero());
 bool mouseDown_[3];
 bool keys[256];
-gl::Texture::Format gtexfmt;
 
 float mouseX, mouseY;
 bool pause;
@@ -43,7 +42,6 @@ struct SApp : AppBasic {
 		glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE);
 		glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
 		glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);
-		gtexfmt.setInternalFormat(hdrFormat);
 		setWindowSize(wsx, wsy);
 
 		tmpEnergy = Array2D<Vec2f>(sx, sy);
