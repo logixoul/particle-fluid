@@ -80,6 +80,7 @@ struct SApp : App {
 	void stefanDraw()
 	{
 		sw::timeit("draw", [&]() {
+			gl::setMatricesWindow(getWindowSize(), false);
 			float limit = 65504 - 1;
 			auto img5 = img.clone();
 			if (keys['9']) {
@@ -113,7 +114,6 @@ struct SApp : App {
 				"float laplace = max(fetch1(tex), 0.0);"
 				"_out = vec3(laplace);"
 			);
-			//auto tex2b = gpuBlur2_4::run(tex2, 2, 2); // this is the slow part.
 			auto laplacetexB = gpuBlur2_4::run_longtail(laplacetex, 5, 1.0f);
 			auto laplacetexSum = shade2(laplacetex, laplacetexB,
 				"_out = fetch3(tex) + fetch3(tex2);"
