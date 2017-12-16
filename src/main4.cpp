@@ -128,13 +128,8 @@ struct SApp : App {
 
 			auto grads = get_gradients_tex(tex);
 
-			// WHAT I'M WORKING ON - fresnel. So I'm debugging it with drawing vec3(dot(N, I)).
 			auto tex2 = shade2(tex, grads, envMap, laplaceBGradientmapped,
 				"vec2 grad = fetch2(tex2);"
-				// in the following i put - in the beginning randomly, to fix a bug whether the reflection would show the same
-				// side of the sphere as the refraction. now the color'd normalmap is bluish rather than yellowish.
-				// but when I draw vec3(dot(N, I)), it turns out that the original (without the '-') is correct (and its result
-				// is very consistent with what I expect). Also the original makes fresnel work fine. So I reverted to the original.
 				"vec3 N = normalize(vec3(-grad.x, -grad.y, -1.0));"
 				"vec3 I=-normalize(vec3(tc.x-.5, tc.y-.5, 1.0));"
 				"float eta=1.0/1.3;"
@@ -143,9 +138,8 @@ struct SApp : App {
 				"vec3 albedo = 0.0*vec3(0.005, 0.0, 0.0);"
 				"c = mix(albedo, c, pow(.9, fetch1(tex) * 50.0));" // tmp
 				"R = reflect(I, N);"
-				"float fresnelAmount = getFresnel(I, N);"
 				"if(fetch1(tex) > surfTensionThres)"
-				"	c += getEnv(R) * fresnelAmount * 10.0;" // *10.0 to tmp simulate one side of the envmap being brighter than the other
+				"	c += getEnv(R) * 10.0;" // *10.0 to tmp simulate one side of the envmap being brighter than the other
 
 				"vec3 laplaceShadedB = fetch3(tex4);"
 				"c += laplaceShadedB;"
@@ -153,11 +147,6 @@ struct SApp : App {
 				"_out = c;"
 				, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f),
 				"float PI = 3.14159265358979323846264;\n"
-				"float getFresnel(vec3 I, vec3 N) {"
-				"	float R0 = 0.01;" // maybe is ok. but wikipedia has a way for calculating it.
-				"	float dotted = dot(I, N);"
-				"	return R0 + (1.0-R0) * pow(1.0-dotted, 5.0);"
-				"}"
 				"vec2 latlong(vec3 v) {\n"
 				"v = v.xzy;\n"
 				"v = normalize(v);\n"
@@ -232,8 +221,6 @@ struct SApp : App {
 
 			auto img_b = img.clone();
 			sw::timeit("surftension&incompressibility [blurs]", [&]() {
-				//for(int i = 0; i < 4; i++)
-				//	img_b = gauss3(img_b);
 				img_b = gaussianBlur(img_b, 6*2+1);
 			});
 			sw::timeit("surftension&incompressibility [the rest]", [&]() {
@@ -241,16 +228,6 @@ struct SApp : App {
 				{
 					auto& guidance = img_b;
 					auto g = gradient_i(guidance, p);
-					//g *= surfTension;
-
-					/*if(guidance(p) < surfTensionThres)
-					{
-						g *= surfTension * (guidance(p) - surfTensionThres);
-					}
-					else
-					{
-						g *= guidance(p);
-					}*/
 					float mul = guidance(p);
 					if(guidance(p) < surfTensionThres)
 					{
@@ -262,7 +239,6 @@ struct SApp : App {
 					}
 					g *= mul;
 					g *= -1.0f;
-					//g += surfTension * -g * (1.0f / (guidance(p) + 1.0f));
 
 					tmpEnergy(p) += g; // 
 				}
