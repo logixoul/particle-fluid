@@ -226,8 +226,8 @@ struct SApp : App {
 			}
 
 			sw::timeit("img&energy gauss3", [&]() {
-			img=gauss3(img);
-			tmpEnergy=gauss3(tmpEnergy);
+				img=gauss3(img);
+				tmpEnergy=gauss3(tmpEnergy);
 			});
 
 			auto img_b = img.clone();
@@ -355,9 +355,7 @@ struct SApp : App {
 		cout<<"vmax: " << *std::max_element(velBegin,velEnd) << endl;
 
 		ivec2 scaledm2 = ivec2(mouseX * (float)sx, mouseY * (float)sy);
-		auto toPrint = gradient_f(img, scaledm2);
 		cout << "scale is " << ::scale << endl;
-		cout << "gradient at p = " << toPrint << endl;
 		cout << "surftension thres: " << surfTensionThres << endl;
 		cout << "surface tension: " << surfTension << endl;
 		cout << "gravity: " << gravity << endl;
@@ -365,32 +363,6 @@ struct SApp : App {
 
 		if(pause)
 			Sleep(50);
-		//Sleep(5);
-	}
-	// nullTerminatedLoadFile
-	string ntLoadFile(string filename)
-	{
-		vector<unsigned char> vec;
-		loadFile(vec, filename);
-		return string(vec.begin(), vec.end());
-	}
-	/*void draw(gl::Texture tex, Rectf srcRect, Rectf dstRect)
-	{
-		glBegin(GL_QUADS);
-		Rectf tc_(srcRect.getUpperLeft() / tex.getSize(), srcRect.getLowerRight() / tex.getSize());
-		glTexCoord2f(tc_.getX1(), tc_.getY1()); glVertex2f(dstRect.getX1(), dstRect.getY1());
-		glTexCoord2f(tc_.getX2(), tc_.getY1()); glVertex2f(dstRect.getX2(), dstRect.getY1());
-		glTexCoord2f(tc_.getX2(), tc_.getY2()); glVertex2f(dstRect.getX2(), dstRect.getY2());
-		glTexCoord2f(tc_.getX1(), tc_.getY2()); glVertex2f(dstRect.getX1(), dstRect.getY2());
-		glEnd();
-	}*/
-	template<class T>
-	vec2 gradient_f(Array2D<T> src, vec2 p)
-	{
-		vec2 gradient;
-		gradient.x = getBilinear(src, p.x + 1, p.y) - getBilinear(src, p.x - 1, p.y);
-		gradient.y = getBilinear(src, p.x, p.y + 1) - getBilinear(src, p.x, p.y - 1);
-		return gradient;
 	}
 };		
 
