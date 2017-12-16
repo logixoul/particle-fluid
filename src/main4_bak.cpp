@@ -10,41 +10,40 @@
 #include "gpuBlur2_4.h"
 #include "cfg1.h"
 #include "sw.h"
-#include "my_console.h"
 #include "hdrwrite.h"
 #include <float.h>
 
 typedef Array2D<float> Image;
 int wsx=800, wsy = 800 * (800.0f / 1280.0f);
 int scale = 4;
-int sx = wsx / scale;
-int sy = wsy / scale;
+int sx = wsx / ::scale;
+int sy = wsy / ::scale;
 Image img(sx, sy);
-Array2D<Vec2f> velocity(sx, sy, Vec2f::zero());
-bool mouseDown_[3];
-bool keys[256];
+Array2D<vec2> velocity(sx, sy, vec2());
 
-float mouseX, mouseY;
+
+
+
 bool pause;
-bool keys2[256];
+
 
 void updateConfig() {
 }
 
-struct SApp : AppBasic {
+struct SApp : App {
 	Rectf area;
 		
 	void setup()
 	{
-		_controlfp(_DN_FLUSH, _MCW_DN);
+		enableDenormalFlushToZero();
 
-		area = Rectf(0, 0, (float)sx-1, (float)sy-1).inflated(Vec2f::zero());
+		area = Rectf(0, 0, (float)sx-1, (float)sy-1).inflated(vec2());
 
 		createConsole();
 		
-		glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE);
-		glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
-		glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);
+		createConsole();
+		disableGLReadClamp();
+		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
 
 		forxy(img)
@@ -52,41 +51,22 @@ struct SApp : AppBasic {
 			//img(p) = ci::randFloat(); // NEWCODE
 		}
 
-		tmpEnergy = Array2D<Vec2f>(sx, sy);
+		tmpEnergy = Array2D<vec2>(sx, sy);
 	}
 	void keyDown(KeyEvent e)
 	{
-		keys[e.getChar()] = true;
-		if(e.isControlDown()&&e.getCode()!=KeyEvent::KEY_LCTRL)
-		{
-			keys2[e.getChar()] = !keys2[e.getChar()];
-			return;
-		}
 		if(keys['r'])
 		{
 			std::fill(img.begin(), img.end(), 0.0f);
-			std::fill(velocity.begin(), velocity.end(), Vec2f::zero());
+			std::fill(velocity.begin(), velocity.end(), vec2());
 		}
 		if(keys['p'] || keys['2'])
 		{
 			pause = !pause;
 		}
 	}
-	void keyUp(KeyEvent e)
-	{
-		keys[e.getChar()] = false;
-	}
-	
-	void mouseDown(MouseEvent e)
-	{
-		mouseDown_[e.isLeft() ? 0 : e.isMiddle() ? 1 : 2] = true;
-	}
-	void mouseUp(MouseEvent e)
-	{
-		mouseDown_[e.isLeft() ? 0 : e.isMiddle() ? 1 : 2] = false;
-	}
-	Vec2f direction;
-	Vec2f lastm;
+	vec2 direction;
+	vec2 lastm;
 	void mouseDrag(MouseEvent e)
 	{
 		mm();
@@ -101,12 +81,12 @@ struct SApp : AppBasic {
 		lastm = getMousePos();
 	}
 	Array2D<float> img3;
-	Array2D<Vec2f> tmpEnergy3;
-	Array2D<Vec2f> tmpEnergy;
+	Array2D<vec2> tmpEnergy3;
+	Array2D<vec2> tmpEnergy;
 
 	void toTmpEnergy()
 	{
-		tmpEnergy = Array2D<Vec2f>(sx, sy);
+		tmpEnergy = Array2D<vec2>(sx, sy);
 		forxy(tmpEnergy)
 		{
 			tmpEnergy(p) = velocity(p) * img(p);
@@ -122,13 +102,13 @@ struct SApp : AppBasic {
 		}
 	}
 
-	void moveMatter(Vec2i p, Vec2f p2, float movedMatter, Vec2f transferredEnergy, Vec2f vec2)
+	void moveMatter(ivec2 p, vec2 p2, float movedMatter, vec2 transferredEnergy, vec2 vec2)
 	{
 		aaPoint_i2(img3, p, -movedMatter);
 		aaPoint2(img3, p2, movedMatter);
 		
 		aaPoint_i2(tmpEnergy3, p, -transferredEnergy);
-		if(area.contains(Vec2f(p) + vec2))
+		if(area.contains(vec2(p) + vec2))
 			aaPoint2(tmpEnergy3, p2, transferredEnergy);
 	}
 
@@ -145,9 +125,6 @@ struct SApp : AppBasic {
 		if(first) { globaldict["ltm"] = 0.0f; globaldict["mul"] = 1.0f; mouseY = .4f; }
 		globaldict_default("mul2", 1.0f);
 		first = false;
-
-		wsx = getWindowSize().x;
-		wsy = getWindowSize().y;
 
 		mouseX = getMousePos().x / (float)wsx;
 		//if(keys['x']) {
@@ -179,8 +156,8 @@ struct SApp : AppBasic {
 		{
 			forxy(velocity)
 			{
-				//velocity(p) += Vec2f(0.0f, gravity);
-				tmpEnergy(p) += Vec2f(0.0f, gravity) * img(p);
+				//velocity(p) += vec2(0.0f, gravity);
+				tmpEnergy(p) += vec2(0.0f, gravity) * img(p);
 			}
 
 			sw::timeit("img&energy gauss3", [&]() {
@@ -242,7 +219,7 @@ struct SApp : AppBasic {
 			int times=1;
 			for(int i = 0; i < times; i++) {
 				img3=Array2D<float>(sx, sy);
-				tmpEnergy3=Array2D<Vec2f>(sx, sy, Vec2f::zero());
+				tmpEnergy3=Array2D<vec2>(sx, sy, vec2());
 				auto area2=Rectf(area);
 				area2.x2 -= .01f;
 				area2.y2 -= .01f;
@@ -251,10 +228,10 @@ struct SApp : AppBasic {
 					if(img(p) == 0.0f)
 						continue;
 					
-					Vec2f vec = (tmpEnergy(p) / img(p)) / float(times);
+					vec2 vec = (tmpEnergy(p) / img(p)) / float(times);
 	
-					Vec2f dstOrig = Vec2f(p) + vec;
-					Vec2f dst = area2.closestPoint(dstOrig);
+					vec2 dstOrig = vec2(p) + vec;
+					vec2 dst = area2.closestPoint(dstOrig);
 
 					aaPoint2_fast(img3, dst, img(p));
 	
@@ -274,7 +251,7 @@ struct SApp : AppBasic {
 
 			if(mouseDown_[0])
 			{
-				Vec2f scaledm = Vec2f(mouseX * (float)sx, mouseY * (float)sy);
+				vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 				Area a(scaledm, scaledm);
 				int r = 5; //sqrt(800);
 				a.expand(r, r);
@@ -282,7 +259,7 @@ struct SApp : AppBasic {
 				{
 					for(int y = a.y1; y <= a.y2; y++)
 					{
-						Vec2f v = Vec2f(x, y) - scaledm;
+						vec2 v = vec2(x, y) - scaledm;
 						float w = max(0.0f, 1.0f - v.length() / r);
 						w = 3 * w * w - 2 * w * w * w;
 						w=max(0.0f,w);
@@ -291,7 +268,7 @@ struct SApp : AppBasic {
 				}
 			} else if(mouseDown_[2]) {
 				mm();
-				Vec2f scaledm = Vec2f(mouseX * (float)sx, mouseY * (float)sy);
+				vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 				Area a(scaledm, scaledm);
 				int r = 15; //sqrt(800);
 				a.expand(r, r);
@@ -299,7 +276,7 @@ struct SApp : AppBasic {
 				{
 					for(int y = a.y1; y <= a.y2; y++)
 					{
-						Vec2f v = Vec2f(x, y) - scaledm;
+						vec2 v = vec2(x, y) - scaledm;
 						float w = max(0.0f, 1.0f - v.length() / r);
 						w = 3 * w * w - 2 * w * w * w;
 						if(img.wr(x, y) != 0.0f)
@@ -540,7 +517,7 @@ struct SApp : AppBasic {
 		cout<<"vmin: " << *std::min_element(velBegin,velEnd) << ", ";
 		cout<<"vmax: " << *std::max_element(velBegin,velEnd) << endl;
 
-		Vec2i scaledm2 = Vec2i(mouseX * (float)sx, mouseY * (float)sy);
+		ivec2 scaledm2 = ivec2(mouseX * (float)sx, mouseY * (float)sy);
 		auto toPrint = keys['g'] ? gradient_f(img, scaledm2) : gradient_i2(img, scaledm2);
 		cout << "scale is " << scale << endl;
 		cout << "gradient at p = " << toPrint << endl;
@@ -572,12 +549,12 @@ struct SApp : AppBasic {
 		return string(vec.begin(), vec.end());
 	}
 	// http://www.asawicki.info/news_1301_reflect_and_refract_functions.html
-	Vec3f refract(const Vec3f &I, const Vec3f &N, float eta)
+	vec3 refract(const vec3 &I, const vec3 &N, float eta)
 	{
 		float N_dot_I = ci::dot(N, I);
 		float k = 1.f - eta * eta * (1.f - N_dot_I * N_dot_I);
 		if (k < 0.f)
-			return Vec3f(0.f, 0.f, 0.f);
+			return vec3(0.f, 0.f, 0.f);
 		else
 			return eta * I - (eta * N_dot_I + sqrtf(k)) * N;
 	}
@@ -592,9 +569,9 @@ struct SApp : AppBasic {
 		glEnd();
 	}
 	template<class T>
-	Vec2f gradient_f(Array2D<T> src, Vec2f p)
+	vec2 gradient_f(Array2D<T> src, vec2 p)
 	{
-		Vec2f gradient;
+		vec2 gradient;
 		gradient.x = getBilinear(src, p.x + 1, p.y) - getBilinear(src, p.x - 1, p.y);
 		gradient.y = getBilinear(src, p.x, p.y + 1) - getBilinear(src, p.x, p.y - 1);
 		return gradient;

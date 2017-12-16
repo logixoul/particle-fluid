@@ -18,6 +18,13 @@ float randFloat()
 	return rand() / (float)RAND_MAX;
 }
 
+void createConsole()
+{
+	AllocConsole();
+	std::fstream* fs = new std::fstream("CONOUT$");
+	std::cout.rdbuf(fs->rdbuf());
+}
+
 void loadFile(std::vector<unsigned char>& buffer, const std::string& filename) //designed for loading files from hard disk in an std::vector
 {
   std::ifstream file(filename.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
@@ -43,6 +50,14 @@ float smoothstep(float edge0, float edge1, float x)
 	x = constrain(x, 0.f, 1.f);
 	// Evaluate polynomial
 	return x*x*(3 - 2*x);
+}
+
+float linearstep(float edge0, float edge1, float x)
+{
+	// Scale, bias and saturate x to 0..1 range
+	x = (x - edge0) / (edge1 - edge0);
+	x = constrain(x, 0.f, 1.f);
+	return x;
 }
 
 // Program tested on Microsoft Visual Studio 2008 - Zahid Ghadialy
@@ -85,5 +100,30 @@ namespace Stopwatch
 		double elapsed = (c.QuadPart - counterAtStart_.QuadPart) * 1000 / (double)timerFreq_.QuadPart;
 		return elapsed;
 	  }
+	}
+}
+
+void copyCvtData(ci::Surface8u const& surface, Array2D<vec3> dst) {
+	forxy(dst) {
+		ColorAT<uint8_t> inPixel = surface.getPixel(p);
+		dst(p) = vec3(inPixel.r, inPixel.g, inPixel.b) / 255.0f;
+	}
+}
+void copyCvtData(ci::SurfaceT<float> const& surface, Array2D<vec3> dst) {
+	forxy(dst) {
+		ColorAT<float> inPixel = surface.getPixel(p);
+		dst(p) = vec3(inPixel.r, inPixel.g, inPixel.b);
+	}
+}
+void copyCvtData(ci::SurfaceT<float> const& surface, Array2D<float> dst) {
+	forxy(dst) {
+		ColorAT<float> inPixel = surface.getPixel(p);
+		dst(p) = inPixel.r;
+	}
+}
+void copyCvtData(ci::ChannelT<float> const& surface, Array2D<float> dst) {
+	forxy(dst) {
+		float inPixel = surface.getValue(p);
+		dst(p) = inPixel;
 	}
 }
