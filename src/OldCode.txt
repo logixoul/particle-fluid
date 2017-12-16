@@ -1,0 +1,29 @@
+cout<<"==============="<<endl;
+cout<<"min: " << *std::min_element(img.begin(),img.end()) << ", ";
+cout<<"max: " << *std::max_element(img.begin(),img.end()) << endl;
+auto velBegin=(float*)velocity.begin();
+auto velEnd=(float*)velocity.end();
+cout<<"vmin: " << *std::min_element(velBegin,velEnd) << ", ";
+cout<<"vmax: " << *std::max_element(velBegin,velEnd) << endl;
+
+ivec2 scaledm2 = ivec2(mouseX * (float)sx, mouseY * (float)sy);
+cout << "scale is " << ::scale << endl;
+cout << "surftension thres: " << surfTensionThres << endl;
+cout << "surface tension: " << surfTension << endl;
+cout << "gravity: " << gravity << endl;
+cout << "fps: " << getFrameRate() << endl;
+
+======================
+
+// vignetting
+tex2 = shade2(tex2,
+	"vec3 c = fetch3();"
+	"vec2 tc2 = tc-vec2(.5);"
+	"float ndist = length(tc2)/sqrt(.5*.5+.5*.5);" //normalized dist in [0,1]
+	"float att = exp(-ndist*ndist*6);"
+	"c /= c + vec3(1.0);"
+	"c = pow(c, vec3(1.0/att));"
+	"c /= vec3(1.0) - c;"
+	"_out=c;"
+	, ShadeOpts().scale(1.0f / ::scale));
+

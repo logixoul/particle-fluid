@@ -3,11 +3,10 @@
 #include "stuff.h"
 #include "shade.h"
 #include "gpgpu.h"
-#include "gpuBlur2_4.h"
+#include "gpuBlur2_5.h"
 #include "stefanfw.h"
 
 #include "hdrwrite.h"
-//#include <float.h>
 
 typedef Array2D<float> Image;
 int wsx=800, wsy = 800 * (800.0f / 1280.0f);
@@ -80,6 +79,8 @@ struct SApp : App {
 	void stefanDraw()
 	{
 		sw::timeit("draw", [&]() {
+			gl::clear(Color(0, 0, 0));
+
 			gl::setMatricesWindow(getWindowSize(), false);
 			float limit = 65504 - 1;
 			auto img5 = img.clone();
@@ -114,16 +115,15 @@ struct SApp : App {
 				"float laplace = max(fetch1(tex), 0.0);"
 				"_out = vec3(laplace);"
 			);
-			auto laplacetexB = gpuBlur2_4::run_longtail(laplacetex, 5, 1.0f);
-			auto laplacetexSum = shade2(laplacetex, laplacetexB,
-				"_out = fetch3(tex) + fetch3(tex2);"
-			);
+			auto laplacetexB = gpuBlur2_5::run_longtail(laplacetex, 4, 1.0f);
 
-			auto laplaceBGradientmapped = shade2(laplacetexSum,
+			auto laplaceBGradientmapped = shade2(laplacetexB,
 				"float c = fetch1();"
+				"c *= 8.0;"
 				"c /= c + 1.0;"
 				// this is taken from https://www.shadertoy.com/view/Mld3Rn
 				"_out = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
+				, ShadeOpts().ifmt(GL_RGBA16F)
 			);
 
 			auto grads = get_gradients_tex(tex);
@@ -139,7 +139,7 @@ struct SApp : App {
 				"c = mix(albedo, c, pow(.9, fetch1(tex) * 50.0));" // tmp
 				"R = reflect(I, N);"
 				"if(fetch1(tex) > surfTensionThres)"
-				"	c += getEnv(R) * 10.0;" // *10.0 to tmp simulate one side of the envmap being brighter than the other
+				"	c += getEnv(R) * 5.0;" // mul to tmp simulate one side of the envmap being brighter than the other
 
 				"vec3 laplaceShadedB = fetch3(tex4);"
 				"c += laplaceShadedB;"
@@ -164,18 +164,6 @@ struct SApp : App {
 				"}\n"
 			);
 
-			// vignetting
-			if (0) tex2 = shade2(tex2,
-				"vec3 c = fetch3();"
-				"vec2 tc2 = tc-vec2(.5);"
-				"float ndist = length(tc2)/sqrt(.5*.5+.5*.5);" //normalized dist in [0,1]
-				"float att = exp(-ndist*ndist*6);"
-				"c /= c + vec3(1.0);"
-				"c = pow(c, vec3(1.0/att));"
-				"c /= vec3(1.0) - c;"
-				"_out=c;"
-				, ShadeOpts().scale(1.0f / ::scale));
-
 			tex2 = shade2(tex2,
 				"vec3 c = fetch3(tex);"
 				"if(c.r<0.0||c.g<0.0||c.b<0.0) { _out = vec3(1.0, 0.0, 0.0); }" // eases debugging
@@ -187,11 +175,6 @@ struct SApp : App {
 	}
 	void stefanUpdate()
 	{
-		static bool first = true;
-		if(first) { mouseY = .4f; }
-		first = false;
-
-
 		surfTensionThres=cfg1::getOpt("surfTensionThres", .5f,
 			[&]() { return keys['6']; },
 			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
@@ -204,8 +187,6 @@ struct SApp : App {
 		auto incompressibilityCoef=cfg1::getOpt("incompressibilityCoef", 1.0f,
 			[&]() { return keys['\\']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
-
-		gl::clear(Color(0, 0, 0));
 
 		if(!pause)
 		{
@@ -321,21 +302,6 @@ struct SApp : App {
 			"_out=c;"
 			"}");
 #endif
-		
-		cout<<"==============="<<endl;
-		cout<<"min: " << *std::min_element(img.begin(),img.end()) << ", ";
-		cout<<"max: " << *std::max_element(img.begin(),img.end()) << endl;
-		auto velBegin=(float*)velocity.begin();
-		auto velEnd=(float*)velocity.end();
-		cout<<"vmin: " << *std::min_element(velBegin,velEnd) << ", ";
-		cout<<"vmax: " << *std::max_element(velBegin,velEnd) << endl;
-
-		ivec2 scaledm2 = ivec2(mouseX * (float)sx, mouseY * (float)sy);
-		cout << "scale is " << ::scale << endl;
-		cout << "surftension thres: " << surfTensionThres << endl;
-		cout << "surface tension: " << surfTension << endl;
-		cout << "gravity: " << gravity << endl;
-		cout << "fps: " << getFrameRate() << endl;
 
 		if(pause)
 			Sleep(50);
