@@ -1,7 +1,4 @@
 #include "precompiled.h"
-#include "util.h"
-#include "stuff.h"
-#include "shade.h"
 
 int sx = 800, sy = 500;
 gl::VboMeshRef vboMesh;
