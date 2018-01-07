@@ -33,31 +33,26 @@ struct SApp : App {
 	{
 		stefanfw::beginFrame();
 		stefanUpdate();
-		stefanDraw();
 		stefanfw::endFrame();
-	}
-	void stefanDraw()
-	{
-		gl::clear(Color(0, 0, 0));
-
-		auto tex = gtex(img);
-		tex->setTopDown(true);
-		gl::draw(tex, getWindowBounds());
 	}
 	void stefanUpdate()
 	{
+		gl::clear(Color(0, 0, 0));
+
 		static string vshader =
 			"#version 450\n"
 			"in vec2 ciPosition;"
 			"void main() {"
 			"	gl_Position.xy = ciPosition.xy;"
+			"	gl_Position.z = 0.0;"
+			//"	gl_Position.w = 1.0;"
 			"}"
 			;
 		static string fshader =
 			"#version 450\n"
-			"layout(location = 0) out float img;"
+			"layout(location = 0) out vec4 img;"
 			"void main() {"
-			"	img = 1;"
+			"	img = vec4(1, 1, 0, 1);"
 			"}";
 
 		gl::GlslProgRef prog = gl::GlslProg::create(
@@ -65,30 +60,9 @@ struct SApp : App {
 
 		gl::ScopedGlslProg sgp(prog);
 					
-		gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
-		beginRTT(imgt2);
-		GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0 };
-		glDrawBuffers(1, myBuffers);
-		glPointSize(1);
+		glPointSize(10);
 		gl::draw(vboMesh);
-		img = gettexdata<float>(imgt2, GL_RED, GL_FLOAT);
-		endRTT();
 		gl::checkError();
-			
-		if(mouseDown_[0])
-		{
-			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
-			Area a(scaledm, scaledm);
-			int r = 80;
-			a.expand(r, r);
-			for(int x = a.x1; x <= a.x2; x++)
-			{
-				for(int y = a.y1; y <= a.y2; y++)
-				{
-					img.wr(x, y) += 1;
-				}
-			}
-		}
 	}
 };		
 
