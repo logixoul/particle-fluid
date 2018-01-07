@@ -3,13 +3,12 @@
 #include "stuff.h"
 #include "shade.h"
 
-int sx=800, sy = 800 * (800.0f / 1280.0f);
+int sx = 800, sy = 500;
 gl::VboMeshRef vboMesh;
 
 struct SApp : App {
 	void setup()
 	{
-		disableGLReadClamp();
 		setWindowSize(sx, sy);
 
 		vector<vec2> poss(sx*sy);
