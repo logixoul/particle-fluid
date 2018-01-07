@@ -2,21 +2,12 @@
 #include "util.h"
 #include "stuff.h"
 #include "shade.h"
-#include "gpgpu.h"
-#include "gpuBlur2_5.h"
 #include "stefanfw.h"
-#include "Fbo.h"
 
-#include "hdrwrite.h"
-
-// with scale = 1:
-// 16fps
-
-typedef Array2D<float> Image;
 int wsx=800, wsy = 800 * (800.0f / 1280.0f);
 int sx = wsx;
 int sy = wsy;
-Image img(sx, sy);
+Array2D<float> img(sx, sy);
 
 gl::VboMeshRef vboMesh;
 
@@ -55,7 +46,6 @@ struct SApp : App {
 	}
 	void stefanUpdate()
 	{
-		auto imgt = gtex(img);
 		static string vshader =
 			"#version 450\n"
 			"in vec2 ciPosition;"
