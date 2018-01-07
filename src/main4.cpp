@@ -76,14 +76,13 @@ struct SApp : App {
 		gl::ScopedGlslProg sgp(prog);
 					
 		gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
-		Fbo fbo(list_of(imgt2));
-		fbo.bind();
+		beginRTT(imgt2);
 		GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0 };
 		glDrawBuffers(1, myBuffers);
-		glPointSize(10);
+		glPointSize(1);
 		gl::draw(vboMesh);
 		img = gettexdata<float>(imgt2, GL_RED, GL_FLOAT);
-		Fbo::unbind();
+		endRTT();
 		gl::checkError();
 			
 		if(mouseDown_[0])
