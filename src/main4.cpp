@@ -2,21 +2,15 @@
 #include "util.h"
 #include "stuff.h"
 #include "shade.h"
-#include "stefanfw.h"
 
-int wsx=800, wsy = 800 * (800.0f / 1280.0f);
-int sx = wsx;
-int sy = wsy;
-Array2D<float> img(sx, sy);
-
+int sx=800, sy = 800 * (800.0f / 1280.0f);
 gl::VboMeshRef vboMesh;
 
 struct SApp : App {
 	void setup()
 	{
 		disableGLReadClamp();
-		stefanfw::eventHandler.subscribeToEvents(*this);
-		setWindowSize(wsx, wsy);
+		setWindowSize(sx, sy);
 
 		vector<vec2> poss(sx*sy);
 		for(int i = 0; i < poss.size(); i++) {
