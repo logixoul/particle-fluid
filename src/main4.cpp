@@ -29,13 +29,7 @@ struct SApp : App {
 			{ std::make_pair(posLayout, vbo) }
 		);
 	}
-	void update()
-	{
-		stefanfw::beginFrame();
-		stefanUpdate();
-		stefanfw::endFrame();
-	}
-	void stefanUpdate()
+	void draw()
 	{
 		gl::clear(Color(0, 0, 0));
 
@@ -45,7 +39,7 @@ struct SApp : App {
 			"void main() {"
 			"	gl_Position.xy = ciPosition.xy;"
 			"	gl_Position.z = 0.0;"
-			//"	gl_Position.w = 1.0;"
+			"	gl_Position.w = 1.0;"
 			"}"
 			;
 		static string fshader =
@@ -60,7 +54,7 @@ struct SApp : App {
 
 		gl::ScopedGlslProg sgp(prog);
 					
-		glPointSize(10);
+		glPointSize(30);
 		gl::draw(vboMesh);
 		gl::checkError();
 	}
