@@ -58,34 +58,20 @@ struct SApp : App {
 		auto imgt = gtex(img);
 		static string vshader =
 			"#version 450\n"
-			"uniform sampler2D imgTex;"
 			"in vec2 ciPosition;"
-			"out float vOutImg;"
 			"void main() {"
-			"	vec2 tc = ciPosition.xy / textureSize(imgTex, 0);"
-			"	float img = texture(imgTex, tc).x;"
-			"	vOutImg = img;"
 			"	gl_Position.xy = ciPosition.xy;"
 			"}"
 			;
 		static string fshader =
 			"#version 450\n"
-			"in float vOutImg;"
 			"layout(location = 0) out float img;"
 			"void main() {"
-			"	img = 1+ 0*vOutImg;"
+			"	img = 1;"
 			"}";
 
-		gl::GlslProgRef prog;
-		try {
-			prog = gl::GlslProg::create(
-				gl::GlslProg::Format().vertex(vshader).fragment(fshader).attribLocation("ciPosition", 0).preprocess(false));
-		}
-		catch (gl::GlslProgCompileExc const& e) {
-			cout << "gl::GlslProgCompileExc: " << e.what() << endl;
-			cout << "source:" << endl;
-			throw;
-		}
+		gl::GlslProgRef prog = gl::GlslProg::create(
+			gl::GlslProg::Format().vertex(vshader).fragment(fshader).attribLocation("ciPosition", 0).preprocess(false));
 
 		gl::ScopedGlslProg sgp(prog);
 					
@@ -94,8 +80,7 @@ struct SApp : App {
 		fbo.bind();
 		GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0 };
 		glDrawBuffers(1, myBuffers);
-		prog->uniform("imgTex", 0); imgt->bind(0);
-		glPointSize(1);
+		glPointSize(10);
 		gl::draw(vboMesh);
 		img = gettexdata<float>(imgt2, GL_RED, GL_FLOAT);
 		Fbo::unbind();
