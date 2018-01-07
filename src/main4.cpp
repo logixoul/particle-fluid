@@ -5,12 +5,16 @@
 #include "gpgpu.h"
 #include "gpuBlur2_5.h"
 #include "stefanfw.h"
+#include "Fbo.h"
 
 #include "hdrwrite.h"
 
+// with scale = 1:
+// 16fps
+
 typedef Array2D<float> Image;
 int wsx=800, wsy = 800 * (800.0f / 1280.0f);
-int scale = 4;
+int scale = 1;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 Image img(sx, sy);
@@ -19,8 +23,7 @@ float surfTensionThres;
 
 bool pause;
 
-void updateConfig() {
-}
+gl::VboMeshRef vboMesh;
 
 struct SApp : App {
 	Rectf area;
@@ -38,6 +41,20 @@ struct SApp : App {
 		setWindowSize(wsx, wsy);
 
 		tmpEnergy = Array2D<vec2>(sx, sy);
+
+		gl::enableVerticalSync(false);
+		disableFrameRate();
+
+		vector<vec2> poss(sx*sy);
+		for(int i = 0; i < poss.size(); i++) {
+			poss[i] = vec2(i%sx, i / sx);
+		}
+		gl::VboRef convectionVbo = gl::Vbo::create(GL_ARRAY_BUFFER, poss, GL_STATIC_DRAW);
+		geom::BufferLayout posLayout;
+		posLayout.append(geom::POSITION, 2, sizeof(decltype(poss[0])), 0);
+		vboMesh = gl::VboMesh::create(poss.size(), GL_POINTS,
+			{ std::make_pair(posLayout, convectionVbo) }
+		);
 	}
 	void update()
 	{
@@ -195,9 +212,9 @@ struct SApp : App {
 				tmpEnergy(p) += vec2(0.0f, gravity) * img(p);
 			}
 
-			sw::timeit("img&energy gauss3", [&]() {
-				img=gauss3(img);
-				tmpEnergy=gauss3(tmpEnergy);
+			sw::timeit("img&energy blur", [&]() {
+				img = gaussianBlur<float, WrapModes::GetClamped>(img, 3);
+				tmpEnergy = gaussianBlur<vec2, WrapModes::GetClamped>(tmpEnergy, 3);
 			});
 
 			auto img_b = img.clone();
@@ -226,39 +243,100 @@ struct SApp : App {
 			});
 			
 			sw::timeit("processFluid", [&]() {
-			int times=1;
-			for(int i = 0; i < times; i++) {
-				img3=Array2D<float>(sx, sy);
-				tmpEnergy3=Array2D<vec2>(sx, sy, vec2());
-				auto area2=Rectf(area);
-				area2.x2 -= .01f;
-				area2.y2 -= .01f;
-				forxy(img)
-				{
-					if(img(p) == 0.0f)
-						continue;
-					
-					vec2 vec = (tmpEnergy(p) / img(p)) / float(times);
-	
-					vec2 dstOrig = vec2(p) + vec;
-					vec2 dst = area2.closestPoint(dstOrig);
+				bool OLD = false;
+				if (OLD) {
+					int times = 1;
+					for (int i = 0; i < times; i++) {
+						img3 = Array2D<float>(sx, sy);
+						tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
+						auto area2 = Rectf(area);
+						area2.x2 -= .01f;
+						area2.y2 -= .01f;
+						forxy(img)
+						{
+							if (img(p) == 0.0f)
+								continue;
 
-					aaPoint2_fast(img3, dst, img(p));
-	
-					auto transferredEnergy = tmpEnergy(p);
-					if(area2.contains(dstOrig))
-						aaPoint2_fast(tmpEnergy3, dst, transferredEnergy);
+							vec2 vec = (tmpEnergy(p) / img(p)) / float(times);
+
+							vec2 dstOrig = vec2(p) + vec;
+							vec2 dst = area2.closestPoint(dstOrig);
+
+							aaPoint2_fast(img3, dst, img(p));
+
+							auto transferredEnergy = tmpEnergy(p);
+							if (area2.contains(dstOrig))
+								aaPoint2_fast(tmpEnergy3, dst, transferredEnergy);
+						}
+						img = img3;
+						tmpEnergy = tmpEnergy3;
+					}
 				}
-				img = img3;
-				tmpEnergy = tmpEnergy3;
-			}
+				else {
+					auto imgt = gtex(img);
+					auto tmpEnergyt = gtex(tmpEnergy);
+					static string vshader =
+						"#version 450\n"
+						"uniform sampler2D imgTex;"
+						"uniform sampler2D tmpEnergyTex;"
+						"in vec4 ciPosition;"
+						"out float vOutImg;"
+						"out vec2 vOutTmpEnergy;"
+						"void main() {"
+						"	vec2 tc = ciPosition.xy / textureSize(imgTex, 0);"
+						"	float img = texture(imgTex, tc).x;"
+						"	vec2 tmpEnergy = 0.0 * texture(tmpEnergyTex, tc).xy;"
+						"	vOutImg = img;"
+						"	vOutTmpEnergy = tmpEnergy;"
+						"	gl_Position.xy = ciPosition.xy + tmpEnergy;"
+						"}"
+						;
+					static string fshader =
+						"#version 450\n"
+						"in float vOutImg;"
+						"in vec2 vOutTmpEnergy;"
+						"layout(location = 0) out float img;"
+						"layout(location = 1) out vec2 tmpEnergy;"
+						"void main() {"
+						"	img = vOutImg;"
+						"	tmpEnergy = vOutTmpEnergy;"
+						"}";
+
+					gl::GlslProgRef prog;
+					try {
+						prog = gl::GlslProg::create(
+							gl::GlslProg::Format().vertex(vshader).fragment(fshader).attribLocation("ciPosition", 0).preprocess(false));
+					}
+					catch (gl::GlslProgCompileExc const& e) {
+						cout << "gl::GlslProgCompileExc: " << e.what() << endl;
+						cout << "source:" << endl;
+						throw;
+					}
+
+					gl::ScopedGlslProg sgp(prog);
+					
+					gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
+					gl::TextureRef tmpEnergyt2 = maketex(sx, sy, GL_RG16F);
+					Fbo fbo(list_of(imgt2)(tmpEnergyt2));
+					fbo.bind();
+					GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+					glDrawBuffers(2, myBuffers);
+					prog->uniform("imgTex", 0); imgt->bind(0);
+					prog->uniform("tmpEnergyTex", 1); tmpEnergyt->bind(1);
+					glPointSize(1);
+					gl::draw(vboMesh);
+					img = gettexdata<float>(imgt2, GL_RED, GL_FLOAT);
+					tmpEnergy = gettexdata<vec2>(tmpEnergyt2, GL_RG, GL_FLOAT);
+					Fbo::unbind();
+					gl::checkError();
+				}
 			});
 			
 			if(mouseDown_[0])
 			{
 				vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 				Area a(scaledm, scaledm);
-				int r = 5;
+				int r = 80/pow(2, ::scale);
 				a.expand(r, r);
 				for(int x = a.x1; x <= a.x2; x++)
 				{
