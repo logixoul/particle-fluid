@@ -25,12 +25,9 @@ struct SApp : App {
 		static string vshader =
 			"#version 450\n"
 			"uniform mat4 proj;"
-			"in vec4 ciPosition;"
+			"in vec2 ciPosition;"
 			"void main() {"
-			/*"	gl_Position.xy = ciPosition.xy;"
-			"	gl_Position.z = 0.0;"
-			"	gl_Position.w = 1.0;"*/
-			"	gl_Position = proj * ciPosition;"
+			"	gl_Position = proj * vec4(ciPosition, 0.0, 1.0);"
 			"}"
 			;
 		static string fshader =
