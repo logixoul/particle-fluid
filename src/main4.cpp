@@ -216,13 +216,13 @@ struct SApp : App {
 
 			auto img_b = img.clone();
 			sw::timeit("surftension&incompressibility [blurs]", [&]() {
-				img_b = gaussianBlur(img_b, 6*2+1);
+				img_b = gaussianBlur<float, WrapModes::GetClamped>(img_b, 6*2+1);
 			});
 			sw::timeit("surftension&incompressibility [the rest]", [&]() {
 				forxy(velocity)
 				{
 					auto& guidance = img_b;
-					auto g = gradient_i(guidance, p);
+					auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
 					float mul = guidance(p);
 					if(guidance(p) < surfTensionThres)
 					{

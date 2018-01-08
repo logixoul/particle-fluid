@@ -81,6 +81,13 @@ struct WrapModes {
 			return src(x, y);
 		}
 	};
+	struct GetClamped {
+		template<class T>
+		static T& fetch(Array2D<T>& src, int x, int y)
+		{
+			return ::get_clamped(src, x, y);
+		}
+	};
 	typedef GetWrapped DefaultImpl;
 };
 template<class T, class FetchFunc>
