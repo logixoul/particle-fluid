@@ -30,30 +30,27 @@ tex2 = shade2(tex2,
 ======================
 
 			sw::timeit("processFluid", [&]() {
-				int times = 1;
-				for (int i = 0; i < times; i++) {
-					img3 = Array2D<float>(sx, sy);
-					tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
-					auto area2 = Rectf(area);
-					area2.x2 -= .01f;
-					area2.y2 -= .01f;
-					forxy(img)
-					{
-						if (img(p) == 0.0f)
-							continue;
+				img3 = Array2D<float>(sx, sy);
+				tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
+				auto area2 = Rectf(area);
+				area2.x2 -= .01f;
+				area2.y2 -= .01f;
+				forxy(img)
+				{
+					if (img(p) == 0.0f)
+						continue;
 
-						vec2 vec = (tmpEnergy(p) / img(p)) / float(times);
+					vec2 vec = tmpEnergy(p) / img(p);
 
-						vec2 dstOrig = vec2(p) + vec;
-						vec2 dst = area2.closestPoint(dstOrig);
+					vec2 dstOrig = vec2(p) + vec;
+					vec2 dst = area2.closestPoint(dstOrig);
 
-						aaPoint2_fast(img3, dst, img(p));
+					aaPoint2_fast(img3, dst, img(p));
 
-						auto transferredEnergy = tmpEnergy(p);
-						if (area2.contains(dstOrig))
-							aaPoint2_fast(tmpEnergy3, dst, transferredEnergy);
-					}
-					img = img3;
-					tmpEnergy = tmpEnergy3;
+					auto transferredEnergy = tmpEnergy(p);
+					if (area2.contains(dstOrig))
+						aaPoint2_fast(tmpEnergy3, dst, transferredEnergy);
 				}
+				img = img3;
+				tmpEnergy = tmpEnergy3;
 			});

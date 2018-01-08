@@ -11,7 +11,7 @@
 
 typedef Array2D<float> Image;
 int wsx=800, wsy = 800 * (800.0f / 1280.0f);
-int scale = 1;
+int scale = 2;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 Image img(sx, sy);
@@ -251,13 +251,22 @@ struct SApp : App {
 					"out float vOutImg;"
 					"out vec2 vOutTmpEnergy;"
 					"void main() {"
-					"	vec2 tc = ciPosition.xy / textureSize(imgTex, 0);"
+					"	vec2 texSize = textureSize(imgTex, 0);"
+					"	vec2 tc = ciPosition.xy / texSize;"
 					"	float img = texture(imgTex, tc).x;"
+					"	if(img == 0.0) { gl_Position = vec4(-1, -1, 0, 1); return; }"
 					"	vec2 tmpEnergy = texture(tmpEnergyTex, tc).xy;"
 					"	vec2 vec = tmpEnergy / img;"
+					"	vec2 dstOrig = ciPosition + vec;"
+					"	vec2 dst = dstOrig;"
+					"	dst.x = max(3, min(texSize.x-3, dst.x));"
+					"	dst.y = max(3, min(texSize.y-3, dst.y));"
 					"	vOutImg = img;"
 					"	vOutTmpEnergy = tmpEnergy;"
-					"	gl_Position = proj * vec4(ciPosition + vec, 0.0, 1.0);"
+					"	if(dst != dstOrig) {"
+					"		vOutTmpEnergy = vec2(0);"
+					"	}"
+					"	gl_Position = proj * vec4(dst, 0.0, 1.0);"
 					"}"
 					;
 				static string fshader =
