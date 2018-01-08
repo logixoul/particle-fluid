@@ -46,7 +46,7 @@ struct SApp : App {
 		gl::ScopedGlslProg sgp(prog);
 		auto proj = gl::context()->getProjectionMatrixStack().back();
 		gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
-		//imgt2 = shade2(imgt2, "_out = vec3(0);");
+		imgt2 = shade2(imgt2, "_out = vec3(0);");
 		prog->uniform("proj", proj);
 		glPointSize(1);
 		beginRTT(imgt2);
