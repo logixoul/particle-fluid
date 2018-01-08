@@ -11,7 +11,6 @@ struct SApp : App {
 	void draw()
 	{
 		gl::clear(Color(0, 0, 0));
-		gl::setMatricesWindow(sx, sy);
 		
 		static string vshader =
 			"#version 450\n"
@@ -37,7 +36,7 @@ struct SApp : App {
 		gl::ScopedGlslProg sgp(prog);
 		auto proj = gl::context()->getProjectionMatrixStack().back();
 		prog->uniform("proj", proj);
-		glPointSize(30);
+		glPointSize(1);
 		vector<vec2> poss(sx*sy);
 		for (int i = 0; i < poss.size(); i++) {
 			poss[i] = vec2(i%sx, i / sx);
