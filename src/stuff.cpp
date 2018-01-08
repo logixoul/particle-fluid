@@ -75,10 +75,3 @@ void disableGLReadClamp() {
 void enableDenormalFlushToZero() {
 	_controlfp(_DN_FLUSH, _MCW_DN);
 }
-
-gl::TextureRef redToLuminance(gl::TextureRef const& in) {
-	return shade2(in,
-		"_out.rgb = vec3(fetch1());",
-		ShadeOpts().ifmt(GL_RGBA16F)
-	);
-}

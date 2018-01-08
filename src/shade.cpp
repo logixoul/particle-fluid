@@ -66,49 +66,8 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, std::string c
 		<< "#version 130"
 		<< uniformDeclarations
 		<< "vec3 _out = vec3(0.0);"
-		<< "in vec2 tc;"
-		<< "out vec4 OUTPUT;"
-		<< "uniform vec2 mouse;"
-		<< "vec4 fetch4(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).rgba;"
-		<< "}"
-		<< "vec3 fetch3(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).rgb;"
-		<< "}"
-		<< "vec2 fetch2(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).rg;"
-		<< "}"
-		<< "float fetch1(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).r;"
-		<< "}"
-		<< "vec4 fetch4(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).rgba;"
-		<< "}"
-		<< "vec3 fetch3(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).rgb;"
-		<< "}"
-		<< "vec2 fetch2(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).rg;"
-		<< "}"
-		<< "float fetch1(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).r;"
-		<< "}"
-		<< "vec4 fetch4() {"
-		<< "	return texture2D(tex, tc).rgba;"
-		<< "}"
-		<< "vec3 fetch3() {"
-		<< "	return texture2D(tex, tc).rgb;"
-		<< "}"
-		<< "vec2 fetch2() {"
-		<< "	return texture2D(tex, tc).rg;"
-		<< "}"
-		<< "float fetch1() {"
-		<< "	return texture2D(tex, tc).r;"
-		<< "}"
-		<< "vec2 safeNormalized(vec2 v) { return length(v)==0.0 ? v : normalize(v); }"
-		<< "vec3 safeNormalized(vec3 v) { return length(v)==0.0 ? v : normalize(v); }"
-		<< "vec4 safeNormalized(vec4 v) { return length(v)==0.0 ? v : normalize(v); }";
-	string outro =
+		<< "out vec4 OUTPUT;";
+		string outro =
 		Str()
 		<< "void main()"
 		<< "{"
@@ -119,7 +78,7 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, std::string c
 	return intro + fshader + outro;
 }
 
-gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_constChar, ShadeOpts const& opts)
+gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_constChar)
 {
 	const string fshader(fshader_constChar);
 
@@ -134,18 +93,13 @@ gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_con
 					Str()
 					<< "#version 150"
 					<< "in vec4 ciPosition;"
-					<< "in vec2 ciTexCoord0;"
-					<< "out highp vec2 tc;"
-
 					<< "void main()"
 					<< "{"
 					<< "	gl_Position = ciPosition * 2 - 1;"
 					<< "	gl_Position.y = -gl_Position.y;"
-					<< "	tc = vec2(0.0, 1.0) + vec2(1.0, -1.0) * ciTexCoord0;"
 					<< "}")
 				.fragment(completeFshader)
 				.attribLocation("ciPosition", 0)
-				.attribLocation("ciTexCoord0", 1)
 				.preprocess(false);
 			shader = gl::GlslProg::create(fmt);
 			shaders[fshader] = shader;
@@ -179,8 +133,8 @@ gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_con
 		shader->uniform("tsize"+samplerSuffix(i), vec2(1)/vec2(texv[i]->getSize()));
 	}
 	gl::TextureRef result;
-	ivec2 resultSize(tex0->getWidth() * opts._scaleX, tex0->getHeight() * opts._scaleY);
-	GLenum ifmt = opts._ifmt.exists ? opts._ifmt.val : tex0->getInternalFormat();
+	ivec2 resultSize(tex0->getWidth(), tex0->getHeight());
+	GLenum ifmt = tex0->getInternalFormat();
 	result = maketex(resultSize.x, resultSize.y, ifmt);
 
 	beginRTT(result);

@@ -12,9 +12,7 @@ inline gl::TextureRef get_gradients_tex(gl::TextureRef src) {
 		"	float dx=(srcR-srcL)/2.0;"
 		"	float dy=(srcB-srcT)/2.0;"
 		"	_out.xy=vec2(dx,dy);"
-		"}",
-		ShadeOpts().ifmt(GL_RG16F)
-		);
+		"}");
 }
 inline gl::TextureRef gradientForwardTex(gl::TextureRef src) {
 	return shade(list_of(src),
@@ -26,46 +24,6 @@ inline gl::TextureRef gradientForwardTex(gl::TextureRef src) {
 		"	float dy=(srcB-srcHere)/2.0;"
 		"	_out.xy=vec2(dx,dy);"
 		"}");
-}
-inline gl::TextureRef baseshade2(vector<gl::TextureRef> texv, string src, ShadeOpts const& opts = ShadeOpts(), string lib = "")
-{
-	return shade(texv, (lib + "\n" + "void shade() {" + src + "}").c_str(), opts);
-}
-inline gl::TextureRef shade2(
-	gl::TextureRef tex,
-	string src, ShadeOpts const& opts = ShadeOpts(), string lib = "")
-{
-	return baseshade2(list_of(tex), src, opts, lib);
-}
-inline gl::TextureRef shade2(
-	gl::TextureRef tex, gl::TextureRef tex2,
-	string src, ShadeOpts const& opts = ShadeOpts(), string lib = "")
-{
-	return baseshade2(list_of(tex)(tex2), src, opts, lib);
-}
-inline gl::TextureRef shade2(
-	gl::TextureRef tex, gl::TextureRef tex2, gl::TextureRef tex3,
-	string src, ShadeOpts const& opts = ShadeOpts(), string lib = "")
-{
-	return baseshade2(list_of(tex)(tex2)(tex3), src, opts, lib);
-}
-inline gl::TextureRef shade2(
-	gl::TextureRef tex, gl::TextureRef tex2, gl::TextureRef tex3, gl::TextureRef tex4,
-	string src, ShadeOpts const& opts = ShadeOpts(), string lib = "")
-{
-	return baseshade2(list_of(tex)(tex2)(tex3)(tex4), src, opts, lib);
-}
-inline gl::TextureRef shade2(
-	gl::TextureRef tex, gl::TextureRef tex2, gl::TextureRef tex3, gl::TextureRef tex4, gl::TextureRef tex5,
-	string src, ShadeOpts const& opts = ShadeOpts(), string lib = "")
-{
-	return baseshade2(list_of(tex)(tex2)(tex3)(tex4)(tex5), src, opts, lib);
-}
-inline gl::TextureRef shade2(
-	gl::TextureRef tex, gl::TextureRef tex2, gl::TextureRef tex3, gl::TextureRef tex4, gl::TextureRef tex5, gl::TextureRef tex6,
-	string src, ShadeOpts const& opts = ShadeOpts(), string lib = "")
-{
-	return baseshade2(list_of(tex)(tex2)(tex3)(tex4)(tex5)(tex6), src, opts, lib);
 }
 inline gl::TextureRef gauss3tex(gl::TextureRef src) {
 	auto state = shade(list_of(src), "void shade() {"
