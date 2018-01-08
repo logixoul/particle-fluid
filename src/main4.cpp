@@ -7,6 +7,16 @@ struct SApp : App {
 	void setup()
 	{
 		setWindowSize(sx, sy);
+		vector<vec2> poss(sx*sy);
+		for (int i = 0; i < poss.size(); i++) {
+			poss[i] = vec2(i%sx, i / sx);
+		}
+		gl::VboRef vbo = gl::Vbo::create(GL_ARRAY_BUFFER, poss, GL_STATIC_DRAW);
+		geom::BufferLayout posLayout;
+		posLayout.append(geom::POSITION, 2, sizeof(decltype(poss[0])), 0);
+		vboMesh = gl::VboMesh::create(poss.size(), GL_POINTS,
+		{ std::make_pair(posLayout, vbo) }
+		);
 	}
 	void draw()
 	{
@@ -37,16 +47,6 @@ struct SApp : App {
 		auto proj = gl::context()->getProjectionMatrixStack().back();
 		prog->uniform("proj", proj);
 		glPointSize(1);
-		vector<vec2> poss(sx*sy);
-		for (int i = 0; i < poss.size(); i++) {
-			poss[i] = vec2(i%sx, i / sx);
-		}
-		gl::VboRef vbo = gl::Vbo::create(GL_ARRAY_BUFFER, poss, GL_STATIC_DRAW);
-		geom::BufferLayout posLayout;
-		posLayout.append(geom::POSITION, 2, sizeof(decltype(poss[0])), 0);
-		vboMesh = gl::VboMesh::create(poss.size(), GL_POINTS,
-		{ std::make_pair(posLayout, vbo) }
-		);
 		gl::draw(vboMesh);
 		gl::checkError();
 	}
