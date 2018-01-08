@@ -240,7 +240,7 @@ struct SApp : App {
 			});
 			
 			sw::timeit("processFluid", [&]() {
-				bool OLD = true;
+				bool OLD = false;
 				if (OLD) {
 					int times = 1;
 					for (int i = 0; i < times; i++) {
@@ -317,11 +317,10 @@ struct SApp : App {
 					prog->uniform("proj", proj);
 
 					gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
-					imgt2 = shade2(imgt2,
-						"_out = vec3(0);");
+					imgt2 = shade2(imgt2, "_out = vec3(0);");
 					gl::TextureRef tmpEnergyt2 = maketex(sx, sy, GL_RG16F);
-					tmpEnergyt2 = shade2(tmpEnergyt2,
-						"_out = vec3(0);");
+					tmpEnergyt2 = shade2(tmpEnergyt2, "_out = vec3(0);");
+
 					Fbo fbo(list_of(imgt2)(tmpEnergyt2));
 					fbo.bind();
 					GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
