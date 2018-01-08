@@ -1,4 +1,7 @@
 #include "precompiled.h"
+#include "shade.h"
+#include "stuff.h"
+#include "gpgpu.h"
 
 int sx = 800, sy = 500;
 gl::VboMeshRef vboMesh;
@@ -8,7 +11,7 @@ struct SApp : App {
 	{
 		setWindowSize(sx, sy);
 		vector<vec2> poss(sx*sy);
-		for (int i = 0; i < poss.size(); i++) {
+		for (int i = 0; i < poss.size(); i+=4) {
 			poss[i] = vec2(i%sx, i / sx);
 		}
 		gl::VboRef vbo = gl::Vbo::create(GL_ARRAY_BUFFER, poss, GL_STATIC_DRAW);
@@ -42,10 +45,15 @@ struct SApp : App {
 
 		gl::ScopedGlslProg sgp(prog);
 		auto proj = gl::context()->getProjectionMatrixStack().back();
+		gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
+		//imgt2 = shade2(imgt2, "_out = vec3(0);");
 		prog->uniform("proj", proj);
 		glPointSize(1);
+		beginRTT(imgt2);
 		gl::draw(vboMesh);
+		endRTT();
 		gl::checkError();
+		gl::draw(imgt2, getWindowBounds());
 	}
 };		
 
