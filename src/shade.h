@@ -24,4 +24,4 @@ struct Str {
 
 extern std::map<string, float> globaldict;
 void globaldict_default(string s, float f);
-gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_constChar);
+gl::TextureRef shade(gl::TextureRef const& texv, const char* fshader_constChar);

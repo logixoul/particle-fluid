@@ -1,6 +1,5 @@
 #include "precompiled.h"
 #include "stuff.h"
-#include "gpgpu.h"
 
 int denormal_check::num;
 

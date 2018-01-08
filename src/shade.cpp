@@ -44,27 +44,10 @@ auto samplerName = [&](int i) -> string {
 	return "tex" + samplerSuffix(i);
 };
 
-std::string getCompleteFshader(vector<gl::TextureRef> const& texv, std::string const& fshader) {
-	auto texIndex = [&](gl::TextureRef t) {
-		return ToString(
-			1 + (std::find(texv.begin(), texv.end(), t) - texv.begin())
-			);
-	};
-	string uniformDeclarations;
-	FOR(i,0,texv.size()-1)
-	{
-		uniformDeclarations += "uniform sampler2D " + samplerName(i) + ";\n";
-		uniformDeclarations += "uniform vec2 " + samplerName(i) + "Size;\n";
-		uniformDeclarations += "uniform vec2 tsize" + samplerSuffix(i) + ";\n";
-	}
-	foreach(auto& p, globaldict)
-	{
-		uniformDeclarations += "uniform float " + p.first + ";\n";
-	}
+std::string getCompleteFshader(std::string const& fshader) {
 	string intro =
 		Str()
 		<< "#version 130"
-		<< uniformDeclarations
 		<< "vec3 _out = vec3(0.0);"
 		<< "out vec4 OUTPUT;";
 		string outro =
@@ -78,7 +61,7 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, std::string c
 	return intro + fshader + outro;
 }
 
-gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_constChar)
+gl::TextureRef shade(gl::TextureRef const& texv, const char* fshader_constChar)
 {
 	const string fshader(fshader_constChar);
 
@@ -86,7 +69,7 @@ gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_con
 	gl::GlslProgRef shader;
 	if(shaders.find(fshader) == shaders.end())
 	{
-		std::string completeFshader = getCompleteFshader(texv, fshader);
+		std::string completeFshader = getCompleteFshader(fshader);
 		try{
 			auto fmt = gl::GlslProg::Format()
 				.vertex(
@@ -112,29 +95,10 @@ gl::TextureRef shade(vector<gl::TextureRef> const& texv, const char* fshader_con
 	} else {
 		shader = shaders[fshader];
 	}
-	auto tex0 = texv[0];
 	shader->bind();
-	auto app=ci::app::App::get();
-	float mouseX=app->getMousePos().x/float(app->getWindowWidth());
-	float mouseY=app->getMousePos().y/float(app->getWindowHeight());
-	shader->uniform("mouse", vec2(mouseX, mouseY));
-	shader->uniform("tex", 0); tex0->bind(0);
-	shader->uniform("texSize", vec2(tex0->getSize()));
-	shader->uniform("tsize", vec2(1.0)/vec2(tex0->getSize()));
-	foreach(auto& p, globaldict)
-	{
-		shader->uniform(p.first, p.second);
-	}
-	FOR(i, 1, texv.size()-1) {
-		//shader.
-		//string index = texIndex(texv[i]);
-		shader->uniform(samplerName(i), i); texv[i]->bind(i);
-		shader->uniform(samplerName(i) + "Size", vec2(texv[i]->getSize()));
-		shader->uniform("tsize"+samplerSuffix(i), vec2(1)/vec2(texv[i]->getSize()));
-	}
 	gl::TextureRef result;
-	ivec2 resultSize(tex0->getWidth(), tex0->getHeight());
-	GLenum ifmt = tex0->getInternalFormat();
+	ivec2 resultSize(texv->getWidth(), texv->getHeight());
+	GLenum ifmt = texv->getInternalFormat();
 	result = maketex(resultSize.x, resultSize.y, ifmt);
 
 	beginRTT(result);

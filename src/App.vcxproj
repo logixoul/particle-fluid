@@ -146,7 +146,6 @@
     <ClInclude Include="colorspaces.h" />
     <ClInclude Include="easyfft.h" />
     <ClInclude Include="Fbo.h" />
-    <ClInclude Include="gpgpu.h" />
     <ClInclude Include="hdrwrite.h" />
     <ClInclude Include="PerlinCalculator2D.h" />
     <ClInclude Include="precompiled.h" />

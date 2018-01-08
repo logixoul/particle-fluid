@@ -42,10 +42,10 @@ struct SApp : App {
 		gl::GlslProgRef prog = gl::GlslProg::create(
 			gl::GlslProg::Format().vertex(vshader).fragment(fshader).attribLocation("ciPosition", 0).preprocess(false));
 
-		gl::ScopedGlslProg sgp(prog);
 		auto proj = gl::context()->getProjectionMatrixStack().back();
 		gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
-		imgt2 = shade(list_of(imgt2), "void shade() { _out = vec3(0); }");
+		imgt2 = shade(imgt2, "void shade() { _out = vec3(0); }");
+		gl::ScopedGlslProg sgp(prog);
 		prog->uniform("proj", proj);
 		glPointSize(1);
 		beginRTT(imgt2);
