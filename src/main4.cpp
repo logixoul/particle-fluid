@@ -312,9 +312,7 @@ struct SApp : App {
 						throw;
 					}
 
-					gl::ScopedGlslProg sgp(prog);
 					auto proj = gl::context()->getProjectionMatrixStack().back();
-					prog->uniform("proj", proj);
 
 					gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
 					imgt2 = shade2(imgt2, "_out = vec3(0);");
@@ -325,10 +323,12 @@ struct SApp : App {
 					fbo.bind();
 					GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 					glDrawBuffers(2, myBuffers);
-					prog->uniform("imgTex", 0); imgt->bind(0);
-					prog->uniform("tmpEnergyTex", 1); tmpEnergyt->bind(1);
 					glPointSize(1);
 					gl::ScopedBlend sb(GL_ONE, GL_ONE);
+					gl::ScopedGlslProg sgp(prog);
+					prog->uniform("proj", proj);
+					prog->uniform("imgTex", 0); imgt->bind(0);
+					prog->uniform("tmpEnergyTex", 1); tmpEnergyt->bind(1);
 					gl::draw(vboMesh);
 					img = gettexdata<float>(imgt2, GL_RED, GL_FLOAT);
 					tmpEnergy = gettexdata<vec2>(tmpEnergyt2, GL_RG, GL_FLOAT);
