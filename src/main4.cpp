@@ -240,101 +240,70 @@ struct SApp : App {
 			});
 			
 			sw::timeit("processFluid", [&]() {
-				bool OLD = false;
-				if (OLD) {
-					int times = 1;
-					for (int i = 0; i < times; i++) {
-						img3 = Array2D<float>(sx, sy);
-						tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
-						auto area2 = Rectf(area);
-						area2.x2 -= .01f;
-						area2.y2 -= .01f;
-						forxy(img)
-						{
-							if (img(p) == 0.0f)
-								continue;
+				auto imgt = gtex(img);
+				auto tmpEnergyt = gtex(tmpEnergy);
+				static string vshader =
+					"#version 450\n"
+					"uniform sampler2D imgTex;"
+					"uniform sampler2D tmpEnergyTex;"
+					"uniform mat4 proj;"
+					"in vec2 ciPosition;"
+					"out float vOutImg;"
+					"out vec2 vOutTmpEnergy;"
+					"void main() {"
+					"	vec2 tc = ciPosition.xy / textureSize(imgTex, 0);"
+					"	float img = texture(imgTex, tc).x;"
+					"	vec2 tmpEnergy = texture(tmpEnergyTex, tc).xy;"
+					"	vec2 vec = tmpEnergy / img;"
+					"	vOutImg = img;"
+					"	vOutTmpEnergy = tmpEnergy;"
+					"	gl_Position = proj * vec4(ciPosition + vec, 0.0, 1.0);"
+					"}"
+					;
+				static string fshader =
+					"#version 450\n"
+					"in float vOutImg;"
+					"in vec2 vOutTmpEnergy;"
+					"layout(location = 0) out vec4 img;"
+					"layout(location = 1) out vec4 tmpEnergy;"
+					"void main() {"
+					"	img = vec4(vOutImg);"
+					"	tmpEnergy = vec4(vOutTmpEnergy, 0.0, 0.0);"
+					"}";
 
-							vec2 vec = (tmpEnergy(p) / img(p)) / float(times);
-
-							vec2 dstOrig = vec2(p) + vec;
-							vec2 dst = area2.closestPoint(dstOrig);
-
-							aaPoint2_fast(img3, dst, img(p));
-
-							auto transferredEnergy = tmpEnergy(p);
-							if (area2.contains(dstOrig))
-								aaPoint2_fast(tmpEnergy3, dst, transferredEnergy);
-						}
-						img = img3;
-						tmpEnergy = tmpEnergy3;
-					}
+				gl::GlslProgRef prog;
+				try {
+					prog = gl::GlslProg::create(
+						gl::GlslProg::Format().vertex(vshader).fragment(fshader).attribLocation("ciPosition", 0).preprocess(false));
 				}
-				else {
-					auto imgt = gtex(img);
-					auto tmpEnergyt = gtex(tmpEnergy);
-					static string vshader =
-						"#version 450\n"
-						"uniform sampler2D imgTex;"
-						"uniform sampler2D tmpEnergyTex;"
-						"uniform mat4 proj;"
-						"in vec2 ciPosition;"
-						"out float vOutImg;"
-						"out vec2 vOutTmpEnergy;"
-						"void main() {"
-						"	vec2 tc = ciPosition.xy / textureSize(imgTex, 0);"
-						"	float img = texture(imgTex, tc).x;"
-						"	vec2 tmpEnergy = texture(tmpEnergyTex, tc).xy;"
-						"	vec2 vec = tmpEnergy / img;"
-						"	vOutImg = img;"
-						"	vOutTmpEnergy = tmpEnergy;"
-						"	gl_Position = proj * vec4(ciPosition + vec, 0.0, 1.0);"
-						"}"
-						;
-					static string fshader =
-						"#version 450\n"
-						"in float vOutImg;"
-						"in vec2 vOutTmpEnergy;"
-						"layout(location = 0) out vec4 img;"
-						"layout(location = 1) out vec4 tmpEnergy;"
-						"void main() {"
-						"	img = vec4(vOutImg);"
-						"	tmpEnergy = vec4(vOutTmpEnergy, 0.0, 0.0);"
-						"}";
-
-					gl::GlslProgRef prog;
-					try {
-						prog = gl::GlslProg::create(
-							gl::GlslProg::Format().vertex(vshader).fragment(fshader).attribLocation("ciPosition", 0).preprocess(false));
-					}
-					catch (gl::GlslProgCompileExc const& e) {
-						cout << "gl::GlslProgCompileExc: " << e.what() << endl;
-						cout << "source:" << endl;
-						throw;
-					}
-
-					auto proj = gl::context()->getProjectionMatrixStack().back();
-
-					gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
-					imgt2 = shade2(imgt2, "_out = vec3(0);");
-					gl::TextureRef tmpEnergyt2 = maketex(sx, sy, GL_RG16F);
-					tmpEnergyt2 = shade2(tmpEnergyt2, "_out = vec3(0);");
-
-					Fbo fbo(list_of(imgt2)(tmpEnergyt2));
-					fbo.bind();
-					GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-					glDrawBuffers(2, myBuffers);
-					glPointSize(1);
-					gl::ScopedBlend sb(GL_ONE, GL_ONE);
-					gl::ScopedGlslProg sgp(prog);
-					prog->uniform("proj", proj);
-					prog->uniform("imgTex", 0); imgt->bind(0);
-					prog->uniform("tmpEnergyTex", 1); tmpEnergyt->bind(1);
-					gl::draw(vboMesh);
-					img = gettexdata<float>(imgt2, GL_RED, GL_FLOAT);
-					tmpEnergy = gettexdata<vec2>(tmpEnergyt2, GL_RG, GL_FLOAT);
-					Fbo::unbind();
-					gl::checkError();
+				catch (gl::GlslProgCompileExc const& e) {
+					cout << "gl::GlslProgCompileExc: " << e.what() << endl;
+					cout << "source:" << endl;
+					throw;
 				}
+
+				auto proj = gl::context()->getProjectionMatrixStack().back();
+
+				gl::TextureRef imgt2 = maketex(sx, sy, GL_R16F);
+				imgt2 = shade2(imgt2, "_out = vec3(0);");
+				gl::TextureRef tmpEnergyt2 = maketex(sx, sy, GL_RG16F);
+				tmpEnergyt2 = shade2(tmpEnergyt2, "_out = vec3(0);");
+
+				Fbo fbo(list_of(imgt2)(tmpEnergyt2));
+				fbo.bind();
+				GLenum myBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+				glDrawBuffers(2, myBuffers);
+				glPointSize(1);
+				gl::ScopedBlend sb(GL_ONE, GL_ONE);
+				gl::ScopedGlslProg sgp(prog);
+				prog->uniform("proj", proj);
+				prog->uniform("imgTex", 0); imgt->bind(0);
+				prog->uniform("tmpEnergyTex", 1); tmpEnergyt->bind(1);
+				gl::draw(vboMesh);
+				img = gettexdata<float>(imgt2, GL_RED, GL_FLOAT);
+				tmpEnergy = gettexdata<vec2>(tmpEnergyt2, GL_RG, GL_FLOAT);
+				Fbo::unbind();
+				gl::checkError();
 			});
 			
 			if(mouseDown_[0])
