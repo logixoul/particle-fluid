@@ -10,7 +10,7 @@
 #include "gpuBlur2_4.h"
 #include "cfg1.h"
 #include "sw.h"
-#include "hdrwrite.h"
+
 #include <float.h>
 
 typedef Array2D<float> Image;
@@ -338,7 +338,6 @@ struct SApp : App {
 			*/
 			static auto envMap = gl::Texture(ci::loadImage("envmap2.png"));
 			static auto gradientMap = gl::Texture(ci::loadImage("gradientmap.png"));
-			//static auto envMap = gtex(loadRgbeFile("envmap.hdr"));
 			globaldict["surfTensionThres"] = surfTensionThres;
 
 			// the following gives us a sharp refracting boundary and also lets us check for ==0.0 where we reflect.

@@ -7,7 +7,7 @@
 #include "stefanfw.h"
 #include "Fbo.h"
 
-#include "hdrwrite.h"
+
 
 typedef Array2D<float> Image;
 int wsx=800, wsy = 800 * (800.0f / 1280.0f);
@@ -120,7 +120,6 @@ struct SApp : App {
 			auto tex = gtex(img5);
 
 			static auto envMap = gl::Texture::create(ci::loadImage("envmap2.png"));
-			//static auto envMap = gtex(loadRgbeFile("envmap.hdr"));
 			globaldict["surfTensionThres"] = surfTensionThres;
 
 			auto laplacetex = get_laplace_tex(tex);
