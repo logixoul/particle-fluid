@@ -96,7 +96,7 @@ struct SApp : App {
 			gl::clear(Color(0, 0, 0));
 
 			gl::setMatricesWindow(getWindowSize(), false);
-			float limit = 65504 - 1;
+			float limit = 65;
 			auto img5 = img.clone();
 			if (keys['9']) {
 				forxy(img5) {
@@ -105,18 +105,20 @@ struct SApp : App {
 			}
 			if (keys['0']) {
 				forxy(img5) {
-					img5(p) = length(velocity(p)) * sqrt(img(p));
+					img5(p) = length(tmpEnergy(p)) / img5(p);
 				}
 			}
 
 			float currentMax = *std::max_element(img5.begin(), img5.end());
+			float currentMin = *std::min_element(img5.begin(), img5.end());
+			cout << "currentMin=" << currentMin << endl; // prints 0 always
 			if (currentMax > limit)
 				cout << "clamping " << currentMax << " to " << limit << " (ratio " << (currentMax / limit) << ")" << endl;
 			forxy(img5)
 			{
 				img5(p) = min(img5(p), limit);
 			}
-
+			
 			auto tex = gtex(img5);
 
 			static auto envMap = gl::Texture::create(ci::loadImage("envmap2.png"));
@@ -183,6 +185,7 @@ struct SApp : App {
 				"c = pow(c, vec3(1.0/2.2));"
 				"_out = c;"
 			);
+			//tex = shade2(tex, "_out.r = fetch1() / (fetch1() + 1);");
 			gl::draw(tex2, getWindowBounds());
 		});
 	}
