@@ -109,86 +109,12 @@ struct SApp : App {
 				}
 			}
 
-			float currentMax = *std::max_element(img5.begin(), img5.end());
-			float currentMin = *std::min_element(img5.begin(), img5.end());
-			cout << "currentMin=" << currentMin << endl; // prints 0 always
-			if (currentMax > limit)
-				cout << "clamping " << currentMax << " to " << limit << " (ratio " << (currentMax / limit) << ")" << endl;
-			forxy(img5)
-			{
-				img5(p) = min(img5(p), limit);
-			}
-			
 			auto tex = gtex(img5);
 
-			static auto envMap = gl::Texture::create(ci::loadImage("envmap2.png"));
-			globaldict["surfTensionThres"] = surfTensionThres;
-
-			auto laplacetex = get_laplace_tex(tex);
-
-			laplacetex = shade2(laplacetex,
-				"float laplace = max(fetch1(tex), 0.0);"
-				"_out = vec3(laplace);"
-			);
-			auto laplacetexB = gpuBlur2_5::run_longtail(laplacetex, 4, 1.0f);
-
-			auto laplaceBGradientmapped = shade2(laplacetexB,
-				"float c = fetch1();"
-				"c *= 8.0;"
-				"c /= c + 1.0;"
-				// this is taken from https://www.shadertoy.com/view/Mld3Rn
-				"_out = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
-				, ShadeOpts().ifmt(GL_RGBA16F)
-			);
-
-			auto grads = get_gradients_tex(tex);
-
-			auto tex2 = shade2(tex, grads, envMap, laplaceBGradientmapped,
-				"vec2 grad = fetch2(tex2);"
-				"vec3 N = normalize(vec3(-grad.x, -grad.y, -1.0));"
-				"vec3 I=-normalize(vec3(tc.x-.5, tc.y-.5, 1.0));"
-				"float eta=1.0/1.3;"
-				"vec3 R=refract(I, N, eta);"
-				"vec3 c = getEnv(R);"
-				"vec3 albedo = 0.0*vec3(0.005, 0.0, 0.0);"
-				"c = mix(albedo, c, pow(.9, fetch1(tex) * 50.0));" // tmp
-				"R = reflect(I, N);"
-				"if(fetch1(tex) > surfTensionThres)"
-				"	c += getEnv(R) * 5.0;" // mul to tmp simulate one side of the envmap being brighter than the other
-
-				"vec3 laplaceShadedB = fetch3(tex4);"
-				"c += laplaceShadedB;"
-
-				"_out = c;"
-				, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f),
-				"float PI = 3.14159265358979323846264;\n"
-				"vec2 latlong(vec3 v) {\n"
-				"v = v.xzy;\n"
-				"v = normalize(v);\n"
-				"float theta = acos(-v.z);\n" // +z is up
-				"\n"
-				"v.y=-v.y;\n"
-				"float phi = atan(v.y, v.x) + PI;\n"
-				"return vec2(phi / (2.0*PI), theta / (PI/2.0));\n"
-				"}\n"
-				"vec3 w = vec3(.22, .71, .07);"
-				"vec3 getEnv(vec3 v) {\n"
-				"	vec3 c = fetch3(tex3, latlong(v));\n"
-				"	c = pow(c, vec3(2.2));" // gamma correction
-				"	return c;"
-				"}\n"
-			);
-
-			tex2 = shade2(tex2,
-				"vec3 c = fetch3(tex);"
-				"if(c.r<0.0||c.g<0.0||c.b<0.0) { _out = vec3(1.0, 0.0, 0.0); }" // eases debugging
-				"c = pow(c, vec3(1.0/2.2));"
-				"_out = c;"
-			);
-			//tex2 = shade2(tex, "_out.r = fetch1() / (fetch1() + 1);");
-			tex2 = shade2(tex,
+			auto tex2 = shade2(tex,
 				"float c = fetch1()*.2;"
 				"_out.r = c / (c + 1);");
+			tex2->setMagFilter(GL_NEAREST);
 			gl::draw(tex2, getWindowBounds());
 		});
 	}
