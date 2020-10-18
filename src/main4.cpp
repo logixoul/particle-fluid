@@ -62,6 +62,9 @@ struct SApp : App {
 	}
 	void keyDown(KeyEvent e)
 	{
+		if (keys[' ']) {
+			doFluidStep();
+		}
 		if(keys['r'])
 		{
 			std::fill(img.begin(), img.end(), 0.0f);
@@ -139,9 +142,9 @@ struct SApp : App {
 					float w = max(0.0f, 1.0f - length(v) / r);
 					w = 3 * w * w - 2 * w * w * w;
 					img.wr(x, y) += 1.f * w *10.0;
+				}
+			}
 		}
-	}
-}
 		else if (mouseDown_[2]) {
 			mm();
 			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
