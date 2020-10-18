@@ -5,7 +5,6 @@
 #include "gpgpu.h"
 #include "gpuBlur2_5.h"
 #include "stefanfw.h"
-#include "Fbo.h"
 
 
 
@@ -24,8 +23,6 @@ bool pause = true;
 
 void updateConfig() {
 }
-
-gl::VboMeshRef vboMesh;
 
 template<class T, class FetchFunc>
 void aaPoint3(Array2D<T>& dst, vec2 p, T value)
@@ -66,12 +63,6 @@ struct SApp : App {
 		for (int i = 0; i < poss.size(); i++) {
 			poss[i] = vec2(i%sx, i / sx);
 		}
-		gl::VboRef convectionVbo = gl::Vbo::create(GL_ARRAY_BUFFER, poss, GL_STATIC_DRAW);
-		geom::BufferLayout posLayout;
-		posLayout.append(geom::POSITION, 2, sizeof(decltype(poss[0])), 0);
-		vboMesh = gl::VboMesh::create(poss.size(), GL_POINTS,
-			{ std::make_pair(posLayout, convectionVbo) }
-		);
 	}
 	void update()
 	{
@@ -79,7 +70,7 @@ struct SApp : App {
 		stefanUpdate();
 		stefanDraw();
 		stefanfw::endFrame();
-		cout << "bigVelocityCount=" << bigVelocityCount << endl;
+		cout << "bigVelocityCount=" << bigVelocityCount << "\n";
 	}
 	void keyDown(KeyEvent e)
 	{
@@ -126,17 +117,13 @@ struct SApp : App {
 				img5(p) = length(tmpEnergy(p));
 			}
 		}
-		if (keys['0']) {
-			forxy(img5) {
-				img5(p) = length(tmpEnergy(p)) / img5(p);
-			}
-		}*/
+		*/
 		if (keys['0']) {
 			img5 = bigVelocityImg.clone();
 		}
 		float maxElement = *std::max_element(img5.begin(), img5.end());
 		//forxy(img5)img5(p) /= maxElement;
-		cout << "maxElement " << maxElement << endl;
+		cout << "maxElement " << maxElement << "\n";
 
 		auto tex = gtex(img5);
 
@@ -254,18 +241,6 @@ struct SApp : App {
 			}
 		}
 
-#if 0
-		auto tex6 = shade(list_of(gtex(img))(gtex(colormap)), "void shade() { /*float y=fetch1();*/"
-			//"_out=fetch3(tex2,vec2(0.0, y));"
-			"vec3 c=vec3(0.0);"
-			"c.g = mix(0.1, 0.9, tc.y);"
-			"float f=fetch1();"
-			"c.r += c.g * (f/(f+1.0));"
-			"c = pow(c, vec3(1.0/2.2));"
-			"_out=c;"
-			"}");
-#endif
-
 		if (pause)
 			Sleep(50);
 	}
@@ -341,7 +316,7 @@ struct SApp : App {
 				continue;
 
 			vec2 vec = (tmpEnergy(p) / img(p));
-			if (length(vec) > img.w / 2) {
+			if (length(vec) > 20) {
 				bigVelocityCount++;
 				bigVelocityImg(p) = 1.0f;
 			}
