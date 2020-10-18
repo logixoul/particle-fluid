@@ -186,6 +186,9 @@ struct SApp : App {
 				"_out = c;"
 			);
 			//tex2 = shade2(tex, "_out.r = fetch1() / (fetch1() + 1);");
+			tex2 = shade2(tex,
+				"float c = fetch1()*.2;"
+				"_out.r = c / (c + 1);");
 			gl::draw(tex2, getWindowBounds());
 		});
 	}
