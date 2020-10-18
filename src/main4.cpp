@@ -13,7 +13,6 @@ int scale = 2;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 Image img(sx, sy);
-Array2D<vec2> velocity(sx, sy, vec2());
 float surfTensionThres;
 
 bool pause;
@@ -36,7 +35,7 @@ struct SApp : App {
 		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
 
-		tmpEnergy = Array2D<vec2>(sx, sy);
+		tmpEnergy = Array2D<vec2>(sx, sy, vec2());
 	}
 	void update()
 	{
@@ -53,7 +52,7 @@ struct SApp : App {
 		if(keys['r'])
 		{
 			std::fill(img.begin(), img.end(), 0.0f);
-			std::fill(velocity.begin(), velocity.end(), vec2());
+			std::fill(tmpEnergy.begin(), tmpEnergy.end(), vec2());
 		}
 		if(keys['p'] || keys['2'])
 		{
@@ -243,7 +242,7 @@ struct SApp : App {
 			[&]() { return keys['\\']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
 
-		forxy(velocity)
+		forxy(tmpEnergy)
 		{
 			tmpEnergy(p) += vec2(0.0f, gravity) * img(p);
 		}
@@ -258,7 +257,7 @@ struct SApp : App {
 			img_b = gaussianBlur<float, WrapModes::GetClamped>(img_b, 6 * 2 + 1);
 		});
 		sw::timeit("surftension&incompressibility [the rest]", [&]() {
-			forxy(velocity)
+			forxy(tmpEnergy)
 			{
 				auto& guidance = img_b;
 				auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
