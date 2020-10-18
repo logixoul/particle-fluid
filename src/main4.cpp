@@ -229,7 +229,7 @@ struct SApp : App {
 	}
 
 	void doFluidStep() {
-		surfTensionThres = cfg1::getOpt("surfTensionThres", .5f,
+		surfTensionThres = cfg1::getOpt("surfTensionThres", .16f,
 			[&]() { return keys['6']; },
 			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
 		auto surfTension = cfg1::getOpt("surfTension", 1.0f,
@@ -261,10 +261,10 @@ struct SApp : App {
 			{
 				auto& guidance = img_b;
 				auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
-				float mul = guidance(p);
+				float mul = img(p);
 				if (guidance(p) < surfTensionThres)
 				{
-					mul += -surfTension;
+					mul *= -surfTension;
 				}
 				else
 				{

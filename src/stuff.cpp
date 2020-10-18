@@ -44,7 +44,7 @@ vector<float> getGaussianKernel(int ksize, float sigma) {
 	int r=ksize/2;
 	float sum=0.0f;
 	for(int i=-r;i<=r;i++) {
-		float exponent = -(i*i/sq(2*sigma));
+		float exponent = -(i*i/(2*sq(sigma)));
 		float val = exp(exponent);
 		sum += val;
 		result.push_back(val);
