@@ -18,48 +18,37 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #pragma once
+
 #include "precompiled.h"
+#include "ConcurrentQueue.h"
 
-struct TextureCacheKey {
-	ivec2 size;
-	GLenum ifmt;
-	bool allocateMipmaps = false;
-	
-	bool operator==(const TextureCacheKey &other) const
-	{
-		return size == other.size
-			&& ifmt == other.ifmt
-			&& allocateMipmaps == other.allocateMipmaps
-			;
-	}
-};
-
-namespace std {
-
-	template <>
-	struct hash<TextureCacheKey>
-	{
-		std::size_t operator()(const TextureCacheKey& k) const
-		{
-			return k.size.x ^ k.size.y ^ k.ifmt ^ k.allocateMipmaps;
-		}
-	};
-
-}
-
-class TextureCache
+class CrossThreadCallQueue
 {
 public:
-	static TextureCache* instance();
-	gl::TextureRef get(TextureCacheKey const& key);
-	static void clearCaches();
-
-	static void printTextures();
-
-	static void deleteTexture(Tex tex);
+	CrossThreadCallQueue();
+	void pushCall(function<void()>&& func);
+	void execAll();
 
 private:
-	TextureCache();
-
-	std::unordered_map<TextureCacheKey, vector<gl::TextureRef>> cache;
+	//std::thread::id owningThread;
+	ConcurrentQueue<function<void()>> toExecute;
 };
+
+extern thread_local CrossThreadCallQueue crossThreadCallQueue;
+
+///////////////// UNRELATED CODE FOLLOWS
+
+// https://stackoverflow.com/questions/14489935/implementing-futurethen-equivalent-for-asynchronous-execution-in-c11
+template <typename T, typename Work>
+auto then(future<T> f, Work w) -> future<decltype(w(f.get()))>
+{
+	return async([](future<T> f, Work w)
+	{ return w(f.get()); }, move(f), move(w));
+}
+
+template <typename Work>
+auto then(future<void> f, Work w) -> future<decltype(w())>
+{
+	return async([](future<void> f, Work w)
+	{ f.wait(); return w(); }, move(f), move(w));
+}

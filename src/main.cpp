@@ -5,8 +5,8 @@
 #include "gpgpu.h"
 #include "gpuBlur2_5.h"
 #include "stefanfw.h"
-
-
+#include "Array2D_imageProc.h"
+#include "cfg1.h"
 
 typedef Array2D<float> Image;
 int wsx = 1280, wsy = 720;
@@ -51,7 +51,7 @@ struct SApp : App {
 	{
 		enableDenormalFlushToZero();
 
-		createConsole();
+		//createConsole();
 
 		disableGLReadClamp();
 		stefanfw::eventHandler.subscribeToEvents(*this);
@@ -128,13 +128,12 @@ struct SApp : App {
 		auto tex = gtex(img5);
 
 		static auto envMap = gl::Texture::create(ci::loadImage("envmap2.png"));
-		globaldict["surfTensionThres"] = surfTensionThres;
-
-		auto laplacetex = get_laplace_tex(tex);
+		
+		auto laplacetex = get_laplace_tex(tex, GL_CLAMP_TO_BORDER);
 
 		laplacetex = shade2(laplacetex,
 			"float laplace = max(fetch1(tex), 0.0);"
-			"_out = vec3(laplace);"
+			"_out.rgb = vec3(laplace);"
 		);
 		auto laplacetexB = gpuBlur2_5::run_longtail(laplacetex, 4, 1.0f);
 
@@ -143,7 +142,7 @@ struct SApp : App {
 			"c *= 8.0;"
 			"c /= c + 1.0;"
 			// this is taken from https://www.shadertoy.com/view/Mld3Rn
-			"_out = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
+			"_out.rgb = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
 			, ShadeOpts().ifmt(GL_RGBA16F)
 		);
 
@@ -165,8 +164,8 @@ struct SApp : App {
 			"vec3 laplaceShadedB = fetch3(tex4);"
 			"c += laplaceShadedB;"
 
-			"_out = c;"
-			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f),
+			"_out.rgb = c;"
+			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", surfTensionThres),
 			"float PI = 3.14159265358979323846264;\n"
 			"vec2 latlong(vec3 v) {\n"
 			"v = v.xzy;\n"
@@ -187,9 +186,9 @@ struct SApp : App {
 
 		tex2 = shade2(tex2,
 			"vec3 c = fetch3(tex);"
-			"if(c.r<0.0||c.g<0.0||c.b<0.0) { _out = vec3(1.0, 0.0, 0.0); }" // eases debugging
+			"if(c.r<0.0||c.g<0.0||c.b<0.0) { _out.rgb = vec3(1.0, 0.0, 0.0); }" // eases debugging
 			"c = pow(c, vec3(1.0/2.2));"
-			"_out = c;"
+			"_out.rgb = c;"
 		);
 
 		if (0)tex2 = shade2(tex,
