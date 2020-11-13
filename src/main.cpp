@@ -10,7 +10,7 @@
 
 typedef Array2D<float> Image;
 int wsx = 1280, wsy = 720;
-int scale = 2;
+int scale = 4;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 ivec2 sz(sx, sy);
