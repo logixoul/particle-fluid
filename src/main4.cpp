@@ -9,7 +9,7 @@
 
 
 typedef Array2D<float> Image;
-int wsx = 800, wsy = 800 * (800.0f / 1280.0f);
+int wsx = 1280, wsy = 720;
 int scale = 2;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
