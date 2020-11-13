@@ -7,6 +7,7 @@
 #include "stefanfw.h"
 #include "Array2D_imageProc.h"
 #include "cfg1.h"
+#include "CrossThreadCallQueue.h"
 
 typedef Array2D<float> Image;
 int wsx = 1280, wsy = 720;
@@ -127,7 +128,7 @@ struct SApp : App {
 
 		auto tex = gtex(img5);
 
-		static auto envMap = gl::Texture::create(ci::loadImage("envmap2.png"));
+		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
 		
 		auto laplacetex = get_laplace_tex(tex, GL_CLAMP_TO_BORDER);
 
@@ -336,4 +337,5 @@ struct SApp : App {
 	}
 };
 
+CrossThreadCallQueue * gMainThreadCallQueue;
 CINDER_APP(SApp, RendererGl)
