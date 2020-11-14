@@ -226,6 +226,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\won%27t del\grid-fluid-test-10b2-gradientmap\src\MyVideoWriter.cpp" />
     <ClCompile Include="Array2D_imageProc.cpp" />
     <ClCompile Include="ConcurrentQueue.cpp" />
     <ClCompile Include="Constants.cpp" />
@@ -265,6 +266,7 @@
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\won%27t del\grid-fluid-test-10b2-gradientmap\src\MyVideoWriter.h" />
     <ClInclude Include="easyfft.h">
     </ClInclude>
     <ClInclude Include="gpgpu.h" />

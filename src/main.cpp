@@ -8,7 +8,7 @@
 #include "Array2D_imageProc.h"
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
-#include <opencv2/videoio.hpp>
+#include "MyVideoWriter.h"
 
 typedef Array2D<float> Image;
 int wsx = 1280, wsy = 720;
@@ -49,9 +49,11 @@ void aaPoint3(Array2D<T>& dst, float x, float y, T value)
 }
 
 struct SApp : App {
-	cv::VideoWriter mVideoWriter = cv::VideoWriter("testVideo.mp4", //cv::CAP_FFMPEG, // has to be absent because otherwise i get isOpened=false
-		cv::VideoWriter::fourcc('m', 'p', '4', 'v'), // lx: has to be lowercase, because otherwise i get isOpened=false.
-		60, cv::Size(wsx, wsy), true);
+	shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
+
+	void cleanup() {
+		videoWriter.reset();
+	}
 
 	void setup()
 	{
@@ -200,11 +202,8 @@ struct SApp : App {
 		if (0)tex2 = shade2(tex,
 			"float c = fetch1();"
 			"_out.r = c;");
-		//tex2->setMagFilter(GL_NEAREST);
-		//auto texForWrite = shade2(tex2, "_out.rgb =fetch3();", ShadeOpts().scale(::scale));
-
-		auto mat = dlToMat(tex2, 0);
-		mVideoWriter.write(mat);
+		
+		videoWriter->write(tex2);
 		gl::draw(tex2, getWindowBounds());
 	}
 	void stefanUpdate()
@@ -343,20 +342,6 @@ struct SApp : App {
 		}
 		img = img3;
 		tmpEnergy = tmpEnergy3;
-	}
-
-	cv::Mat dlToMat(gl::TextureRef tex, int mipLevel) {
-		ivec2 sz = gl::Texture2d::calcMipLevelSize(mipLevel, tex->getWidth(), tex->getHeight());
-		cv::Mat data = cv::Mat(sz.y, sz.x, CV_8UC3);
-
-		bind(tex);
-		glGetTexImage(GL_TEXTURE_2D, mipLevel, GL_BGR, GL_UNSIGNED_BYTE, data.data);
-
-		return data;
-	}
-
-	void cleanup() override {
-		mVideoWriter.release();
 	}
 };
 
