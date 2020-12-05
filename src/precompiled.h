@@ -35,11 +35,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <cinder/gl/gl.h>
 #include <cinder/ImageIo.h> // todo rm?
 #include <cinder/Vector.h>
-#include <cinder/Rand.h>
-#include <boost/foreach.hpp>
+
+
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include <fftw3.h>
-#include <numeric>
+
 #include <tuple>
 #include <queue>
 #include <opencv2/imgproc.hpp>

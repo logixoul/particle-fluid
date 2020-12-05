@@ -21,7 +21,7 @@ public:
 	}
 	static void print() {
 		cout << "============ CFG values ============";
-		foreach(auto& pair, opts) {
+		for(auto& pair: opts) {
 			auto& key=pair.first;
 			auto opt = opts[key];
 			cout << opt.name << " = " << opt.val;
