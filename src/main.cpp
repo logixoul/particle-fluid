@@ -203,7 +203,7 @@ struct SApp : App {
 			"float c = fetch1();"
 			"_out.r = c;");
 		
-		videoWriter->write(tex2);
+		//videoWriter->write(tex2);
 		gl::draw(tex2, getWindowBounds());
 	}
 	void stefanUpdate()
