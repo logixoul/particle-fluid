@@ -59,7 +59,9 @@ struct SApp : App {
 	{
 		enableDenormalFlushToZero();
 
-		//createConsole();
+		
+
+		//
 
 		disableGLReadClamp();
 		stefanfw::eventHandler.subscribeToEvents(*this);
@@ -249,8 +251,8 @@ struct SApp : App {
 			}
 		}
 
-		if (pause)
-			Sleep(50);
+		//if (pause)
+		//	Sleep(50);
 	}
 
 	template<class T>
@@ -346,4 +348,9 @@ struct SApp : App {
 };
 
 CrossThreadCallQueue * gMainThreadCallQueue;
-CINDER_APP(SApp, RendererGl)
+CINDER_APP(SApp, RendererGl(),
+	[&](ci::app::App::Settings *settings)
+{
+	//bool developer = (bool)ifstream(getAssetPath("developer"));
+	settings->setConsoleWindowEnabled(true);
+})

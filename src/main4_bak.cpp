@@ -39,9 +39,9 @@ struct SApp : App {
 
 		area = Rectf(0, 0, (float)sx-1, (float)sy-1).inflated(vec2());
 
-		createConsole();
 		
-		createConsole();
+		
+		
 		disableGLReadClamp();
 		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
@@ -583,7 +583,7 @@ struct SApp : App {
 //CINDER_APP_BASIC(SApp, RendererGl)
 int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow) {	
 	try{
-		createConsole();
+		
 		cinder::app::AppBasic::prepareLaunch();														
 		cinder::app::AppBasic *app = new SApp;														
 		cinder::app::Renderer *ren = new RendererGl;													

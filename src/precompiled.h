@@ -23,10 +23,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <string>
 #include <cinder/ip/Resize.h>
 #include <complex>
-#include <Windows.h> // for AllocConsole. See if it's still needed.
+// // for AllocConsole. See if it's still needed.
 // these two are from Windows.h
-#undef min
-#undef max
+//#undef min
+//#undef max
 #include <cinder/app/App.h>
 #include <cinder/app/RendererGl.h>
 #include <cinder/gl/GlslProg.h>
