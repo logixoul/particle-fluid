@@ -10,6 +10,8 @@
 #include "CrossThreadCallQueue.h"
 //#include "MyVideoWriter.h"
 
+import util;
+
 typedef Array2D<float> Image;
 int wsx = 1280, wsy = 720;
 int scale = 4;
@@ -22,6 +24,7 @@ int bigVelocityCount;
 Array2D<float> bigVelocityImg(sx, sy, 0.0f);
 
 bool pause = false;
+
 
 void updateConfig() {
 }
@@ -59,7 +62,8 @@ struct SApp : App {
 	{
 		enableDenormalFlushToZero();
 
-		
+		auto delme = ::randFloat();
+		cout << "randFloat=" << delme << endl;
 
 		//
 

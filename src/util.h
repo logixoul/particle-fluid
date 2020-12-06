@@ -199,8 +199,6 @@ T accumulate(InputIt begin, InputIt end, T base) {
 	for(ivec2 p(0, 0); p.y < image.h; p.y++) \
 		for(p.x = 0; p.x < image.w; p.x++)
 
-extern float randFloat();
-
 template<class T>
 void myRemoveIf(vector<T>& vec, function<bool(T const&)> const& pred) {
 	vec.erase(std::remove_if(vec.begin(), vec.end(), pred), vec.end());

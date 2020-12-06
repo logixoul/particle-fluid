@@ -157,6 +157,7 @@
     <ClCompile Include="sw.cpp" />
     <ClCompile Include="TextureCache.cpp" />
     <ClCompile Include="util.cpp" />
+    <ClCompile Include="util.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyVideoWriter.h">

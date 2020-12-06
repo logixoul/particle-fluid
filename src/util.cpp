@@ -38,11 +38,6 @@ void trapFP()
    _controlfp_s(NULL, cw, MCW_EM );
 }
 
-float randFloat()
-{
-	return rand() / (float)RAND_MAX;
-}
-
 /*void createConsole()
 {
 	AllocConsole();
@@ -84,3 +79,4 @@ void copyCvtData(ci::ChannelT<float> const& surface, Array2D<float> dst) {
 		dst(p) = inPixel;
 	}
 }
+
