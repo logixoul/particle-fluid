@@ -8,7 +8,7 @@
 #include "Array2D_imageProc.h"
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
-#include "MyVideoWriter.h"
+//#include "MyVideoWriter.h"
 
 typedef Array2D<float> Image;
 int wsx = 1280, wsy = 720;
@@ -49,10 +49,10 @@ void aaPoint3(Array2D<T>& dst, float x, float y, T value)
 }
 
 struct SApp : App {
-	shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
+	//shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
 
 	void cleanup() {
-		videoWriter.reset();
+		//videoWriter.reset();
 	}
 
 	void setup()

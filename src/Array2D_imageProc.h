@@ -96,7 +96,7 @@ void aaPoint(Array2D<T>& dst, float x, float y, T value)
 template<class T>
 void aaPoint(Array2D<T>& dst, float x, float y, T value)
 {
-	aaPoint<T, WrapModes::DefaultImpl>(dst, p.x, p.y, value);
+	aaPoint<T, WrapModes::DefaultImpl>(dst, x, y, value);
 }
 template<class T>
 void aaPoint(Array2D<T>& dst, vec2 p, T value)
@@ -269,7 +269,7 @@ Array2D<T> separableConvolve(Array2D<T> src, vector<float>& kernel) {
 				T sum = zero;
 				for (int xadd = -r; xadd <= r; xadd++)
 				{
-					sum += kernel[xadd + r] * (FetchFunc::fetch<T>(src, x + xadd, y));
+					sum += kernel[xadd + r] * (FetchFunc::template fetch<T>(src, x + xadd, y));
 				}
 				dst1(x, y) = sum;
 			}
@@ -301,7 +301,7 @@ Array2D<T> separableConvolve(Array2D<T> src, vector<float>& kernel) {
 				T sum = zero;
 				for (int yadd = -r; yadd <= r; yadd++)
 				{
-					sum += kernel[yadd + r] * FetchFunc::fetch<T>(dst1, x, y + yadd);
+					sum += kernel[yadd + r] * FetchFunc::template fetch<T>(dst1, x, y + yadd);
 				}
 				dst2(x, y) = sum;
 			}

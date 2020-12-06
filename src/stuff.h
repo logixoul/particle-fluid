@@ -64,6 +64,22 @@ auto map(Array2D<TSrc> a, Func func) -> Array2D<typename MapHelper<Func>::result
 
 gl::TextureRef maketex(int w, int h, GLint ifmt, bool allocateMipmaps = false, bool clear = false);
 
+
+void checkGLError(string place);
+#define MY_STRINGIZE_DETAIL(x) #x
+#define MY_STRINGIZE(x) MY_STRINGIZE_DETAIL(x)
+#define CHECK_GL_ERROR() checkGLError(__FILE__ ": " MY_STRINGIZE(__LINE__))
+
+template<class T>
+Array2D<T> gettexdata(gl::TextureRef tex, GLenum format, GLenum type, ci::Area area) {
+	Array2D<T> data(area.getWidth(), area.getHeight());
+	
+	bind(tex);
+	glGetTexImage(GL_TEXTURE_2D, 0, format, type, data.data);
+	
+	return data;
+}
+
 template<class T>
 Array2D<T> gettexdata(gl::TextureRef tex, GLenum format, GLenum type) {
 	return gettexdata<T>(tex, format, type, tex->getBounds());
@@ -80,20 +96,6 @@ template<> Array2D<vec2> dl<vec2>(gl::TextureRef tex);
 template<> Array2D<vec3> dl<vec3>(gl::TextureRef tex);
 template<> Array2D<vec4> dl<vec4>(gl::TextureRef tex);
 
-void checkGLError(string place);
-#define MY_STRINGIZE_DETAIL(x) #x
-#define MY_STRINGIZE(x) MY_STRINGIZE_DETAIL(x)
-#define CHECK_GL_ERROR() checkGLError(__FILE__ ": " MY_STRINGIZE(__LINE__))
-
-template<class T>
-Array2D<T> gettexdata(gl::TextureRef tex, GLenum format, GLenum type, ci::Area area) {
-	Array2D<T> data(area.getWidth(), area.getHeight());
-	
-	bind(tex);
-	glGetTexImage(GL_TEXTURE_2D, 0, format, type, data.data);
-	
-	return data;
-}
 
 float sq(float f);
 
@@ -125,7 +127,7 @@ void enableDenormalFlushToZero();
 
 template<class TVec>
 TVec safeNormalized(TVec const& vec) {
-	TVec::value_type len = length(vec);
+	typename TVec::value_type len = length(vec);
 	if (len == 0.0f) {
 		return vec;
 	}
@@ -155,6 +157,6 @@ void pop_front(std::vector<T>& vec)
 
 void myGLFence();
 
-vector<string> toStrings(vector<filesystem::path> paths);
+vector<string> toStrings(vector<std::experimental::filesystem::path> paths);
 
 void enableGlDebugOutput();

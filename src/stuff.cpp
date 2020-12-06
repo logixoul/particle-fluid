@@ -297,7 +297,7 @@ void myGLFence()
 	fence->clientWaitSync(GL_SYNC_FLUSH_COMMANDS_BIT, (GLuint64)(-1)); // timeout: about 200 years
 }
 
-vector<string> toStrings(vector<filesystem::path> paths) {
+vector<string> toStrings(vector<std::experimental::filesystem::path> paths) {
 	vector<string> res;
 	for (auto& path : paths) {
 		res.push_back(path.string());
