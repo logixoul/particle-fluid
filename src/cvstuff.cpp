@@ -18,11 +18,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "precompiled.h"
+#if 0
 #include "cvstuff.h"
 #include "stuff.h"
 #include "gpgpu.h" // for shade2
 #include "CrossThreadCallQueue.h"
-#if 0
 
 void mm(string name, cv::Mat mat) {
 	double minn, maxx;
