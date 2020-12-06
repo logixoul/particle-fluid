@@ -62,7 +62,7 @@ struct SApp : App {
 	{
 		enableDenormalFlushToZero();
 
-		auto delme = ::randFloat();
+		auto delme = ::test<float>();
 		cout << "randFloat=" << delme << endl;
 
 		//
