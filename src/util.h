@@ -153,22 +153,6 @@ private:
 	}
 };
 
-void rotate(vec2& p, float angle);
-
-void trapFP();
-
-template<class F> vec3 apply(vec3 const& v, F f)
-{
-	return vec3(f(v.x), f(v.y), f(v.z));
-}
-
-template<class F> float apply(float v, F f)
-{
-	return f(v);
-}
-
-const float pi = 3.14159265f;
-
 //void createConsole();
 
 

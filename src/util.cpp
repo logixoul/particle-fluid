@@ -20,23 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "precompiled.h"
 #include "util.h"
 
-void rotate(vec2 & p, float angle)
-{
-	float c = cos(angle), s = sin(angle);
-	p = vec2(p.x * c + p.y * (-s), p.x * s + p.y * c);
-}
-
-void trapFP()
-{
-	 // Get the default control word.
-   int cw = _controlfp_s(NULL, 0,0 );
-
-   // Set the exception masks OFF, turn exceptions on.
-   cw &=~(EM_OVERFLOW|EM_UNDERFLOW|/*EM_INEXACT|*/EM_ZERODIVIDE|EM_DENORMAL);
-
-   // Set the control word.
-   _controlfp_s(NULL, cw, MCW_EM );
-}
 
 /*void createConsole()
 {
