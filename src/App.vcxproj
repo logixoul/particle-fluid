@@ -181,6 +181,7 @@
     <ClInclude Include="stuff.h" />
     <ClInclude Include="sw.h" />
     <ClInclude Include="TextureCache.h" />
+    <ClInclude Include="using_namespace.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="hcl_lib.fs" />

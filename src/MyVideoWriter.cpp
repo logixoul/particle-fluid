@@ -1,4 +1,5 @@
 #include "precompiled.h"
+#include "using_namespace.h"
 #include "MyVideoWriter.h"
 
 static cv::Mat dlToMat(gl::TextureRef tex, int mipLevel) {

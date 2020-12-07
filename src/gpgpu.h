@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 #include "precompiled.h"
+#include "using_namespace.h"
 #include "shade.h"
 
 gl::TextureRef get_gradients_tex(gl::TextureRef src, GLuint wrap = GL_REPEAT);

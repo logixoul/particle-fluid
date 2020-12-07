@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "precompiled.h"
+#include "using_namespace.h"
 #include "sw.h"
 
 /*thread_local*/ static std::vector<sw::Entry> times;

@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "precompiled.h"
+#include "using_namespace.h"
 #include "CrossThreadCallQueue.h"
 
 // disabling all thread_local stuff because of RenderDoc. https://github.com/baldurk/renderdoc/issues/1743

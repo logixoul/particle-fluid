@@ -17,6 +17,7 @@
 
 
 #include "precompiled.h"
+#include "using_namespace.h"
 #include <math.h>
 
 #include "simplexnoise.h"

@@ -46,10 +46,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //#include <opencv2/imgproc.hpp>
 #include <thread>
 #define foreach BOOST_FOREACH
-using namespace ci;
-using namespace std;
-using namespace ci::app;
-using namespace std::experimental;
-//using namespace boost::signals2;
 
-typedef gl::TextureRef Tex;
+
+typedef ci::gl::TextureRef Tex;

@@ -1,4 +1,5 @@
 #include "precompiled.h"
+#include "using_namespace.h"
 #include "Array2D_imageProc.h"
 
 #if 0

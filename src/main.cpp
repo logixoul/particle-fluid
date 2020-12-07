@@ -1,4 +1,5 @@
 #include "precompiled.h"
+#include "using_namespace.h"
 import util;
 #include "stuff.h"
 #include "shade.h"

@@ -1,4 +1,5 @@
 #include "precompiled.h"
+#include "using_namespace.h"
 #include "colorspaces.h"
 
 vec3 FromHSL(HslF const& hsl)
