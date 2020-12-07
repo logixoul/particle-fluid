@@ -171,24 +171,6 @@ const float pi = 3.14159265f;
 
 //void createConsole();
 
-template<class T>
-Array2D<T> empty_like(Array2D<T> a) {
-	return Array2D<T>(a.Size(), nofill());
-}
-
-template<class T>
-Array2D<T> ones_like(Array2D<T> a) {
-	return Array2D<T>(a.Size(), 1.0f);
-}
-
-template<class T>
-Array2D<T> zeros_like(Array2D<T> a) {
-	return Array2D<T>(a.Size(), ::zero<T>());
-}
-template<class T>
-void myRemoveIf(vector<T>& vec, function<bool(T const&)> const& pred) {
-	vec.erase(std::remove_if(vec.begin(), vec.end(), pred), vec.end());
-}
 
 
 #define forxy(image) \
