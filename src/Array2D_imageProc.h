@@ -2,6 +2,8 @@
 
 #include "util.h"
 
+import util;
+
 template<class T>
 ivec2 wrapPoint(Array2D<T> const& src, ivec2 p)
 {
