@@ -1,3 +1,4 @@
+#pragma once
 /*
 Tonemaster - HDR software
 Copyright (C) 2018, 2019, 2020 Stefan Monov <logixoul@gmail.com>

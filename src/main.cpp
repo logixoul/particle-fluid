@@ -62,8 +62,8 @@ struct SApp : App {
 	{
 		enableDenormalFlushToZero();
 
-		auto delme = ::test<float>();
-		cout << "randFloat=" << delme << endl;
+		//vector<int> delme{ 0, 1, 2 };
+		//cout << ::accumulateTest(delme.begin(), delme.end(), 0) << endl;
 
 		//
 

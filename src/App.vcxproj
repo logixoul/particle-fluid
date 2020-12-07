@@ -157,7 +157,10 @@
     <ClCompile Include="sw.cpp" />
     <ClCompile Include="TextureCache.cpp" />
     <ClCompile Include="util.cpp" />
-    <ClCompile Include="util.ixx" />
+    <ClCompile Include="util.ixx">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyVideoWriter.h">

@@ -185,22 +185,13 @@ template<class T>
 Array2D<T> zeros_like(Array2D<T> a) {
 	return Array2D<T>(a.Size(), ::zero<T>());
 }
-
-template<class InputIt, class T>
-T accumulate(InputIt begin, InputIt end, T base) {
-	T sum = base;
-	for (auto it = begin; it != end; it++) {
-		sum += *it;
-	}
-	return sum;
-}
-
-#define forxy(image) \
-	for(ivec2 p(0, 0); p.y < image.h; p.y++) \
-		for(p.x = 0; p.x < image.w; p.x++)
-
 template<class T>
 void myRemoveIf(vector<T>& vec, function<bool(T const&)> const& pred) {
 	vec.erase(std::remove_if(vec.begin(), vec.end(), pred), vec.end());
 }
+
+
+#define forxy(image) \
+	for(ivec2 p(0, 0); p.y < image.h; p.y++) \
+		for(p.x = 0; p.x < image.w; p.x++)
 
