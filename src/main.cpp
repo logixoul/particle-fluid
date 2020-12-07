@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "util.h"
+import util;
 #include "stuff.h"
 #include "shade.h"
 #include "gpgpu.h"

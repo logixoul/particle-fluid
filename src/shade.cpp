@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "precompiled.h"
 #include "shade.h"
-#include "util.h"
+import util;
 #include "stuff.h"
 #include "stefanfw.h"
 

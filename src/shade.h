@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 
 #include "precompiled.h"
-#include "util.h"
+import util;
 
 struct GpuScope {
 	GpuScope(string name);

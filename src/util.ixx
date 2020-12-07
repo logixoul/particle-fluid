@@ -1,13 +1,18 @@
 //#include "precompiled.h"
-#include "util.h" // for Array2D
+
 #include <vector>
 #include <functional>
+#include <cinder/Vector.h>
+#include <cinder/Surface.h>
+#include <cinder/Color.h>
+#include "macros.h"
 using std::vector;
 using std::function;
+using namespace glm;
 
 export module util;
 
-export typedef unsigned char byte;
+//export typedef unsigned char byte;
 
 template< typename T >
 struct array_deleter
@@ -33,7 +38,7 @@ export enum nofill {};
 export template<class T>
 struct Array2D;
 
-export typedef glm::tvec3<::byte> bytevec3;
+export typedef glm::tvec3<unsigned char> bytevec3;
 
 void copyCvtData(ci::Surface8u const& surface, Array2D<bytevec3> dst);
 void copyCvtData(ci::Surface8u const& surface, Array2D<vec3> dst);
@@ -141,26 +146,26 @@ private:
 void copyCvtData(ci::Surface8u const& surface, Array2D<bytevec3> dst)
 {
 	forxy(dst) {
-		ColorAT<uint8_t> inPixel = surface.getPixel(p);
+		ci::ColorAT<uint8_t> inPixel = surface.getPixel(p);
 		dst(p) = bytevec3(inPixel.r, inPixel.g, inPixel.b);
 	}
 }
 
 void copyCvtData(ci::Surface8u const& surface, Array2D<vec3> dst) {
 	forxy(dst) {
-		ColorAT<uint8_t> inPixel = surface.getPixel(p);
+		ci::ColorAT<uint8_t> inPixel = surface.getPixel(p);
 		dst(p) = vec3(inPixel.r, inPixel.g, inPixel.b) / 255.0f;
 	}
 }
 void copyCvtData(ci::SurfaceT<float> const& surface, Array2D<vec3> dst) {
 	forxy(dst) {
-		ColorAT<float> inPixel = surface.getPixel(p);
+		ci::ColorAT<float> inPixel = surface.getPixel(p);
 		dst(p) = vec3(inPixel.r, inPixel.g, inPixel.b);
 	}
 }
 void copyCvtData(ci::SurfaceT<float> const& surface, Array2D<float> dst) {
 	forxy(dst) {
-		ColorAT<float> inPixel = surface.getPixel(p);
+		ci::ColorAT<float> inPixel = surface.getPixel(p);
 		dst(p) = inPixel.r;
 	}
 }

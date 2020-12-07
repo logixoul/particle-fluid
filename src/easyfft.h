@@ -1,5 +1,5 @@
 #pragma once
-#include "util.h"
+import util;
 #include "precompiled.h"
 
 Array2D<vec2> fft(Array2D<float> in, int flags);

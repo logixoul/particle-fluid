@@ -1,7 +1,6 @@
 #pragma once
 
-#include "util.h"
-
+#include "macros.h"
 import util;
 
 template<class T>
