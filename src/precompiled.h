@@ -18,7 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#define BOOST_RESULT_OF_USE_DECLTYPE 
+//#define BOOST_RESULT_OF_USE_DECLTYPE 
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -45,7 +45,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <queue>
 //#include <opencv2/imgproc.hpp>
 #include <thread>
-#define foreach BOOST_FOREACH
 
 
-typedef ci::gl::TextureRef Tex;

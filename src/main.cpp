@@ -52,7 +52,7 @@ void aaPoint3(Array2D<T>& dst, float x, float y, T value)
 	FetchFunc::fetch(dst, ix + 1, iy + 1) += (fractx * fracty) * value;
 }
 
-struct SApp : App {
+struct SApp : ci::app::App {
 	//shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
 
 	void cleanup() {
@@ -87,7 +87,7 @@ struct SApp : App {
 		stefanfw::endFrame();
 		cout << "bigVelocityCount=" << bigVelocityCount << "\n";
 	}
-	void keyDown(KeyEvent e)
+	void keyDown(ci::app::KeyEvent e)
 	{
 		if (keys[' ']) {
 			doFluidStep();
@@ -104,11 +104,11 @@ struct SApp : App {
 	}
 	vec2 direction;
 	vec2 lastm;
-	void mouseDrag(MouseEvent e)
+	void mouseDrag(ci::app::MouseEvent e)
 	{
 		mm();
 	}
-	void mouseMove(MouseEvent e)
+	void mouseMove(ci::app::MouseEvent e)
 	{
 		mm();
 	}
@@ -353,7 +353,7 @@ struct SApp : App {
 };
 
 CrossThreadCallQueue * gMainThreadCallQueue;
-CINDER_APP(SApp, RendererGl(),
+CINDER_APP(SApp, ci::app::RendererGl(),
 	[&](ci::app::App::Settings *settings)
 {
 	//bool developer = (bool)ifstream(getAssetPath("developer"));

@@ -1,12 +1,9 @@
-#include "precompiled.h"
-
-#if 0
 #include <vector>
 #include <functional>
 #include <cinder/Vector.h>
 #include <cinder/Surface.h>
 #include <cinder/Color.h>
-#endif
+
 #include "using_namespace.h"
 #include "macros.h"
 

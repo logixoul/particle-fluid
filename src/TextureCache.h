@@ -57,7 +57,7 @@ public:
 
 	static void printTextures();
 
-	static void deleteTexture(Tex tex);
+	static void deleteTexture(gl::TextureRef tex);
 
 private:
 	TextureCache();
