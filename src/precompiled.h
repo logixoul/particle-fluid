@@ -35,15 +35,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <cinder/gl/Fbo.h>
 #include <cinder/gl/gl.h>
 #include <cinder/ImageIo.h> // todo rm?
-#include <cinder/Vector.h>
+//#include <cinder/Vector.h>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/io.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 
-#include <glm/gtx/matrix_transform_2d.hpp>
+//#include <glm/gtx/matrix_transform_2d.hpp>
 //#include <fftw3.h>
 
-#include <tuple>
+//#include <tuple>
 #include <queue>
 //#include <opencv2/imgproc.hpp>
-#include <thread>
+//#include <thread>
 
 
