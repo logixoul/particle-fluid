@@ -35,21 +35,6 @@ void endRTT();
 
 void drawRect();
 
-struct Str {
-	string s;
-	Str& operator<<(string s2) {
-		s += s2 + "\n";
-		return *this;
-	}
-	Str& operator<<(Str s2) {
-		s += s2.s + "\n";
-		return *this;
-	}
-	operator std::string() {
-		return s;
-	}
-};
-
 struct Uniform {
 	function<void(gl::GlslProgRef)> setter;
 	string shortDecl;

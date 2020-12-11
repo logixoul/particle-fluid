@@ -110,66 +110,65 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, vector<Unifor
 	//uniformDeclarations << "layout(binding=0, r32f) uniform coherent image2D image;";
 	*uniformDeclarationsRet = uniformDeclarations.str();
 	string intro =
-		Str()
-		<< "#version 150"
-		<< "#extension GL_ARB_explicit_uniform_location : enable"
-		<< "#extension GL_ARB_texture_gather : enable"
-		//<< "#extension GL_ARB_shader_image_load_store : enable"
-		<< uniformDeclarations.str()
-		<< "in vec2 tc;"
-		<< "in highp vec2 relOutTc;"
-		<< "/*precise*/ out vec4 _out;"
-		//<< "layout(origin_upper_left) in vec4 gl_FragCoord;"
-		;
-	intro += Str()
-		<< "vec4 fetch4(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).rgba;"
-		<< "}"
-		<< "vec3 fetch3(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).rgb;"
-		<< "}"
-		<< "vec2 fetch2(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).rg;"
-		<< "}"
-		<< "float fetch1(sampler2D tex_, vec2 tc_) {"
-		<< "	return texture2D(tex_, tc_).r;"
-		<< "}"
-		<< "vec4 fetch4(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).rgba;"
-		<< "}"
-		<< "vec3 fetch3(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).rgb;"
-		<< "}"
-		<< "vec2 fetch2(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).rg;"
-		<< "}"
-		<< "float fetch1(sampler2D tex_) {"
-		<< "	return texture2D(tex_, tc).r;"
-		<< "}"
-		<< "vec4 fetch4() {"
-		<< "	return texture2D(tex, tc).rgba;"
-		<< "}"
-		<< "vec3 fetch3() {"
-		<< "	return texture2D(tex, tc).rgb;"
-		<< "}"
-		<< "vec2 fetch2() {"
-		<< "	return texture2D(tex, tc).rg;"
-		<< "}"
-		<< "float fetch1() {"
-		<< "	return texture2D(tex, tc).r;"
-		<< "}"
-		<< "vec2 safeNormalized(vec2 v) { return length(v)==0.0 ? v : normalize(v); }"
-		<< "vec3 safeNormalized(vec3 v) { return length(v)==0.0 ? v : normalize(v); }"
-		<< "vec4 safeNormalized(vec4 v) { return length(v)==0.0 ? v : normalize(v); }"
-		<< "#line 0\n\n" // the \n\n is needed only on Intel gpus. Probably a driver bug.
+
+		R"(#version 150
+		 #extension GL_ARB_explicit_uniform_location : enable
+		 #extension GL_ARB_texture_gather : enable
+		// #extension GL_ARB_shader_image_load_store : enable)"
+		+ uniformDeclarations.str() +
+		R"(in vec2 tc;
+		 in highp vec2 relOutTc;
+		 /*precise*/ out vec4 _out;
+		// layout(origin_upper_left) in vec4 gl_FragCoord;
+		 vec4 fetch4(sampler2D tex_, vec2 tc_) {
+		 	return texture2D(tex_, tc_).rgba;
+		 }
+		 vec3 fetch3(sampler2D tex_, vec2 tc_) {
+		 	return texture2D(tex_, tc_).rgb;
+		 }
+		 vec2 fetch2(sampler2D tex_, vec2 tc_) {
+		 	return texture2D(tex_, tc_).rg;
+		 }
+		 float fetch1(sampler2D tex_, vec2 tc_) {
+		 	return texture2D(tex_, tc_).r;
+		 }
+		 vec4 fetch4(sampler2D tex_) {
+		 	return texture2D(tex_, tc).rgba;
+		 }
+		 vec3 fetch3(sampler2D tex_) {
+		 	return texture2D(tex_, tc).rgb;
+		 }
+		 vec2 fetch2(sampler2D tex_) {
+		 	return texture2D(tex_, tc).rg;
+		 }
+		 float fetch1(sampler2D tex_) {
+		 	return texture2D(tex_, tc).r;
+		 }
+		 vec4 fetch4() {
+		 	return texture2D(tex, tc).rgba;
+		 }
+		 vec3 fetch3() {
+		 	return texture2D(tex, tc).rgb;
+		 }
+		 vec2 fetch2() {
+		 	return texture2D(tex, tc).rg;
+		 }
+		 float fetch1() {
+		 	return texture2D(tex, tc).r;
+		 }
+		 vec2 safeNormalized(vec2 v) { return length(v)==0.0 ? v : normalize(v); }
+		 vec3 safeNormalized(vec3 v) { return length(v)==0.0 ? v : normalize(v); }
+		 vec4 safeNormalized(vec4 v) { return length(v)==0.0 ? v : normalize(v); }
+		 #line 0)" + string("\n\n") // the \n\n is needed only on Intel gpus. Probably a driver bug.)"
 		;
 	string outro =
-		Str()
-		<< "void main()"
-		<< "{"
-		<< "	_out = vec4(0.0f, 0.0f, 0.0f, 1.0f);"
-		<< "	shade();"
-		<< "}";
+		R"(
+		 void main()
+		 {
+		 	_out = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		 	shade();
+		 };
+		)";
 	return intro + fshader + outro;
 }
 
@@ -205,25 +204,25 @@ gl::TextureRef shade(vector<gl::TextureRef> const& texv, std::string const& fsha
 	{
 		string uniformDeclarations;
 		std::string completeFshader = getCompleteFshader(texv, opts._uniforms, fshader, &uniformDeclarations);
-		string completeVshader = Str()
-			<< "#version 150"
-			<< "#extension GL_ARB_explicit_uniform_location : enable"
-			//<< "#extension GL_ARB_shader_image_load_store : enable"
-			<< "in vec4 ciPosition;"
-			<< "in vec2 ciTexCoord0;"
-			<< "out highp vec2 tc;"
-			<< "out highp vec2 relOutTc;" // relative out texcoord
-			<< "uniform vec2 uTexCoordOffset, uTexCoordScale;"
-			<< uniformDeclarations
+		string completeVshader = R"(
+			 #version 150
+			 #extension GL_ARB_explicit_uniform_location : enable
+			// #extension GL_ARB_shader_image_load_store : enable
+			 in vec4 ciPosition;
+			 in vec2 ciTexCoord0;
+			 out highp vec2 tc;
+			 out highp vec2 relOutTc; // relative out texcoord
+			 uniform vec2 uTexCoordOffset, uTexCoordScale;
+			 )" + uniformDeclarations + R"(
 
-			<< "void main()"
-			<< "{"
-			<< "	gl_Position = ciPosition * 2 - 1;"
-			<< "	tc = ciTexCoord0;"
-			<< "	relOutTc = tc;"
-			<< "	tc = uTexCoordOffset + uTexCoordScale * tc;"
-			<< opts._vshaderExtra
-			<< "}";
+			 void main()
+			 {
+			 	gl_Position = ciPosition * 2 - 1;
+			 	tc = ciTexCoord0;
+			 	relOutTc = tc;
+			 	tc = uTexCoordOffset + uTexCoordScale * tc;)"
+			+ opts._vshaderExtra +
+			"}";
 			try{
 			auto fmt = gl::GlslProg::Format()
 				.vertex(completeVshader)
