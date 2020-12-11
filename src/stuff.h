@@ -47,31 +47,7 @@ float niceExpRangeX(float mouseX, float min, float max);
 
 float niceExpRangeY(float mouseY, float min, float max);
 
-// todo rm
-/*template<class Func>
-class MapHelper {
-private:
-	static Func* func;
-public:
-	typedef typename decltype((*func)(ivec2(0, 0))) result_dtype;
-};
-
-template<class TSrc, class Func>
-auto map(Array2D<TSrc> a, Func func) -> Array2D<typename MapHelper<Func>::result_dtype> {
-	auto result = Array2D<typename MapHelper<Func>::result_dtype>(a.w, a.h);
-	forxy(a) {
-		result(p) = func(p);
-	}
-	return result;
-}*/
-
 gl::TextureRef maketex(int w, int h, GLint ifmt, bool allocateMipmaps = false, bool clear = false);
-
-
-void checkGLError(string place);
-#define MY_STRINGIZE_DETAIL(x) #x
-#define MY_STRINGIZE(x) MY_STRINGIZE_DETAIL(x)
-#define CHECK_GL_ERROR() checkGLError(__FILE__ ": " MY_STRINGIZE(__LINE__))
 
 template<class T>
 Array2D<T> gettexdata(gl::TextureRef tex, GLenum format, GLenum type, ci::Area area) {
@@ -102,13 +78,6 @@ template<> Array2D<vec4> dl<vec4>(gl::TextureRef tex);
 
 float sq(float f);
 
-
-struct denormal_check {
-	static int num;
-	static void begin_frame();
-	static void check(float f);
-	static void end_frame();
-};
 
 vector<Array2D<float> > split(Array2D<vec3> arr);
 void setWrapBlack(gl::TextureRef tex);

@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "gpgpu.h"
 #include "TextureCache.h"
 
-int denormal_check::num;
-
 // tried to have this as a static member (with thread_local) but I got errors. todo.
 /*thread_local*/ static std::map<string,string> FileCache_db;
 
@@ -200,19 +198,6 @@ gl::TextureRef maketex(int w, int h, GLint ifmt, bool allocateMipmaps, bool clea
 	return tex;
 }
 
-void checkGLError(string place)
-{
-	GLenum errCode;
-	if ((errCode = glGetError()) != GL_NO_ERROR)
-	{
-		cout << "GL error 0x" << hex << errCode << dec << " at " << place << endl;
-	}
-	else {
-		cout << "NO error at " << place << endl;
-	}
-}
-
-
 void disableGLReadClamp() {
 	glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
 }
@@ -304,21 +289,6 @@ vector<string> toStrings(vector<std::experimental::filesystem::path> paths) {
 		res.push_back(path.string());
 	}
 	return res;
-}
-
-inline void denormal_check::begin_frame() {
-	num = 0;
-}
-
-inline void denormal_check::check(float f) {
-	if (f != 0 && fabsf(f) < numeric_limits<float>::min()) {
-		// it's denormalized
-		num++;
-	}
-}
-
-inline void denormal_check::end_frame() {
-	cout << "denormals detected: " << num << endl;
 }
 
 template<> Array2D<bytevec3> dl<bytevec3>(gl::TextureRef tex) {

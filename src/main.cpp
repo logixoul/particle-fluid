@@ -30,28 +30,6 @@ bool pause = false;
 void updateConfig() {
 }
 
-template<class T, class FetchFunc>
-void aaPoint3(Array2D<T>& dst, vec2 p, T value)
-{
-	aaPoint3<T, FetchFunc>(dst, p.x, p.y, value);
-}
-template<class T, class FetchFunc>
-void aaPoint3(Array2D<T>& dst, float x, float y, T value)
-{
-	int ix = x, iy = y;
-	float fx = ix, fy = iy;
-	if (x < 0.0f && fx != x) { fx--; ix--; }
-	if (y < 0.0f && fy != y) { fy--; iy--; }
-	float fractx = x - fx;
-	float fracty = y - fy;
-	float fractx1 = 1.0 - fractx;
-	float fracty1 = 1.0 - fracty;
-	FetchFunc::fetch(dst, ix, iy) += (fractx1 * fracty1) * value;
-	FetchFunc::fetch(dst, ix, iy + 1) += (fractx1 * fracty) * value;
-	FetchFunc::fetch(dst, ix + 1, iy) += (fractx * fracty1) * value;
-	FetchFunc::fetch(dst, ix + 1, iy + 1) += (fractx * fracty) * value;
-}
-
 struct SApp : ci::app::App {
 	//shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
 
@@ -344,8 +322,8 @@ struct SApp : ci::app::App {
 					dst[dim] = sz[dim] - (dst[dim] - sz[dim]);
 				}
 			}
-			aaPoint3<float, WrapModes::GetClamped>(img3, dst, img(p));
-			aaPoint3<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
+			aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
+			aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
 		}
 		img = img3;
 		tmpEnergy = tmpEnergy3;
