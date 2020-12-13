@@ -23,11 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <iostream>
 #include <string>
 #include <cinder/ip/Resize.h>
-#include <complex>
-// // for AllocConsole. See if it's still needed.
-// these two are from Windows.h
-//#undef min
-//#undef max
 #include <cinder/app/App.h>
 #include <cinder/app/RendererGl.h>
 #include <cinder/gl/GlslProg.h>
@@ -39,10 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
-//#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/io.hpp>
-//#include <glm/gtx/norm.hpp>
-//#include <glm/gtx/rotate_vector.hpp>
 
 
 //#include <glm/gtx/matrix_transform_2d.hpp>
