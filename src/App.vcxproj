@@ -55,7 +55,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PrecompiledHeaderFile>precompiled.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>../precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/Zm200 /Bt+ %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
@@ -84,7 +84,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PrecompiledHeaderFile>precompiled.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>../precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/Zm200 /Bt+ %(AdditionalOptions)</AdditionalOptions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -120,68 +120,109 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MyVideoWriter.cpp">
+    <ClCompile Include="lxlib\Array2D_imageProc.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../precompiled.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../precompiled.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="lxlib\cfg1.cpp" />
+    <ClCompile Include="lxlib\colorspaces.cpp" />
+    <ClCompile Include="lxlib\ConcurrentQueue.cpp" />
+    <ClCompile Include="lxlib\Constants.cpp" />
+    <ClCompile Include="lxlib\CrossThreadCallQueue.cpp" />
+    <ClCompile Include="lxlib\cvstuff.cpp" />
+    <ClCompile Include="lxlib\easyfft.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Array2D_imageProc.cpp" />
-    <ClCompile Include="ConcurrentQueue.cpp" />
-    <ClCompile Include="Constants.cpp" />
-    <ClCompile Include="CrossThreadCallQueue.cpp" />
-    <ClCompile Include="cvstuff.cpp">
+    <ClCompile Include="lxlib\events.cpp" />
+    <ClCompile Include="lxlib\Fbo.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="easyfft.cpp">
+    <ClCompile Include="lxlib\gpgpu.cpp" />
+    <ClCompile Include="lxlib\gpuBlur2_5.cpp" />
+    <ClCompile Include="lxlib\MyTimer.cpp" />
+    <ClCompile Include="lxlib\MyVideoWriter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="events.cpp" />
-    <ClCompile Include="gpgpu.cpp" />
-    <ClCompile Include="colorspaces.cpp" />
-    <ClCompile Include="cfg1.cpp" />
-    <ClCompile Include="MyTimer.cpp" />
-    <ClCompile Include="gpuBlur2_5.cpp">
+    <ClCompile Include="lxlib\qdebug.cpp" />
+    <ClCompile Include="lxlib\RenderDoc.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="lxlib\shade.cpp" />
+    <ClCompile Include="lxlib\simplexnoise.cpp" />
+    <ClCompile Include="lxlib\stefanfw.cpp" />
+    <ClCompile Include="lxlib\stuff.cpp" />
+    <ClCompile Include="lxlib\sw.cpp" />
+    <ClCompile Include="lxlib\System.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="lxlib\TextureCache.cpp" />
+    <ClCompile Include="lxlib\util.ixx">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">precompiled.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">precompiled.h</PrecompiledHeaderFile>
+    </ClCompile>
     <ClCompile Include="precompiled.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">precompiled.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">precompiled.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="shade.cpp" />
-    <ClCompile Include="simplexnoise.cpp" />
-    <ClCompile Include="stefanfw.cpp" />
-    <ClCompile Include="stuff.cpp" />
-    <ClCompile Include="sw.cpp" />
-    <ClCompile Include="TextureCache.cpp" />
-    <ClCompile Include="util.ixx">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="macros.h" />
-    <ClInclude Include="MyVideoWriter.h">
+    <ClInclude Include="lxlib\Array2D_imageProc.h" />
+    <ClInclude Include="lxlib\bicubic.h" />
+    <ClInclude Include="lxlib\cfg1.h" />
+    <ClInclude Include="lxlib\colorspaces.h" />
+    <ClInclude Include="lxlib\ConcurrentQueue.h" />
+    <ClInclude Include="lxlib\Constants.h" />
+    <ClInclude Include="lxlib\CrossThreadCallQueue.h" />
+    <ClInclude Include="lxlib\cvstuff.h" />
+    <ClInclude Include="lxlib\easyfft.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="easyfft.h">
+    <ClInclude Include="lxlib\events.h" />
+    <ClInclude Include="lxlib\Fbo.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="gpgpu.h" />
-    <ClInclude Include="gpuBlur2_5.h">
+    <ClInclude Include="lxlib\gpgpu.h" />
+    <ClInclude Include="lxlib\gpuBlur2_5.h" />
+    <ClInclude Include="lxlib\macros.h" />
+    <ClInclude Include="lxlib\MyTimer.h" />
+    <ClInclude Include="lxlib\MyVideoWriter.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="lxlib\qdebug.h" />
+    <ClInclude Include="lxlib\RenderDoc.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="lxlib\renderdoc_app.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="lxlib\shade.h" />
+    <ClInclude Include="lxlib\simplexnoise.h" />
+    <ClInclude Include="lxlib\stefanfw.h" />
+    <ClInclude Include="lxlib\stuff.h" />
+    <ClInclude Include="lxlib\sw.h" />
+    <ClInclude Include="lxlib\System.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="lxlib\TextureCache.h" />
+    <ClInclude Include="lxlib\using_namespace.h" />
     <ClInclude Include="precompiled.h" />
-    <ClInclude Include="shade.h" />
-    <ClInclude Include="simplexnoise.h" />
-    <ClInclude Include="stefanfw.h" />
-    <ClInclude Include="stuff.h" />
-    <ClInclude Include="sw.h" />
-    <ClInclude Include="TextureCache.h" />
-    <ClInclude Include="using_namespace.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="hcl_lib.fs" />
