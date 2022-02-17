@@ -110,6 +110,8 @@ struct SApp : ci::app::App {
 			img(p) = red.img(p) + green.img(p);
 		}
 		auto tex = gtex(img);
+		auto redTex = gtex(::red.img);
+		auto greenTex = gtex(::green.img);
 
 		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
 		
@@ -132,7 +134,10 @@ struct SApp : ci::app::App {
 
 		auto grads = get_gradients_tex(tex);
 
-		auto tex2 = shade2(tex, grads, envMap, laplaceBGradientmapped,
+		auto tex2 = shade2(tex, grads, envMap, laplaceBGradientmapped, redTex, greenTex,
+			"float redVal = fetch1(tex5);"
+			"float greenVal = fetch1(tex6);"
+
 			"vec2 grad = fetch2(tex2);"
 			"vec3 N = normalize(vec3(-grad.x, -grad.y, -1.0));"
 			"vec3 I=-normalize(vec3(tc.x-.5, tc.y-.5, 1.0));"
@@ -147,6 +152,9 @@ struct SApp : ci::app::App {
 
 			"vec3 laplaceShadedB = fetch3(tex4);"
 			"c += laplaceShadedB;"
+
+			"c.r += redVal;"
+			"c.g += greenVal;"
 
 			"_out.rgb = c;"
 			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", surfTensionThres),
