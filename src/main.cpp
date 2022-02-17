@@ -46,11 +46,6 @@ struct SApp : ci::app::App {
 		disableGLReadClamp();
 		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
-
-		vector<vec2> poss(sx*sy);
-		for (int i = 0; i < poss.size(); i++) {
-			poss[i] = vec2(i%sx, i / sx);
-		}
 	}
 	void update()
 	{
