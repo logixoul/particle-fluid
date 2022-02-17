@@ -115,7 +115,7 @@ struct SApp : ci::app::App {
 
 		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
 		
-		auto laplacetex = get_laplace_tex(tex, GL_CLAMP_TO_BORDER);
+		/*auto laplacetex = get_laplace_tex(tex, GL_CLAMP_TO_BORDER);
 
 		laplacetex = shade2(laplacetex,
 			"float laplace = max(fetch1(tex), 0.0);"
@@ -130,11 +130,11 @@ struct SApp : ci::app::App {
 			// this is taken from https://www.shadertoy.com/view/Mld3Rn
 			"_out.rgb = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
 			, ShadeOpts().ifmt(GL_RGBA16F)
-		);
+		);*/
 
 		auto grads = get_gradients_tex(tex);
 
-		auto tex2 = shade2(tex, grads, envMap, laplaceBGradientmapped, redTex, greenTex,
+		auto tex2 = shade2(tex, grads, envMap, /*laplaceBGradientmapped*/ tex, redTex, greenTex,
 			"float redVal = fetch1(tex5);"
 			"float greenVal = fetch1(tex6);"
 
@@ -153,10 +153,10 @@ struct SApp : ci::app::App {
 			//"vec3 laplaceShadedB = fetch3(tex4);"
 			//"c += laplaceShadedB;"
 
-			//"c.r += redVal;"
-			//"c.g += greenVal;"
-			"if(redVal > greenVal) c.r += redVal;"
-			"else c.g += greenVal;"
+			"c.r += redVal;"
+			"c.g += greenVal;"
+			//"if(redVal > greenVal) c.r += redVal;"
+			//"else c.g += greenVal;"
 
 			"_out.rgb = c;"
 			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", surfTensionThres),
@@ -269,7 +269,33 @@ struct SApp : ci::app::App {
 			a.tmpEnergy(p) += g * a.img(p);
 		}
 	}
+	void advect(Material& material, Array2D<vec2> offsets) {
+		auto& img = material.img;
+		auto& tmpEnergy = material.tmpEnergy;
 
+		auto img3 = Array2D<float>(sx, sy);
+		auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
+		forxy(img)
+		{
+			if (img(p) == 0.0f)
+				continue;
+
+			vec2 vec = (tmpEnergy(p) / img(p));
+			vec2 dst = vec2(p) + vec;
+
+			vec2 newEnergy = tmpEnergy(p);
+			for (int dim = 0; dim <= 1; dim++) {
+				if (dst[dim] >= sz[dim]) {
+					newEnergy[dim] *= -1.0f;
+					dst[dim] = sz[dim] - (dst[dim] - sz[dim]);
+				}
+			}
+			aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
+			aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
+		}
+		img = img3;
+		tmpEnergy = tmpEnergy3;
+	}
 	void doFluidStep() {
 		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
 			[&]() { return keys['6']; },
@@ -317,30 +343,15 @@ struct SApp : ci::app::App {
 
 				tmpEnergy(p) += g * img(p);
 			}
-
-			auto img3 = Array2D<float>(sx, sy);
-			auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
-			forxy(img)
-			{
-				if (img(p) == 0.0f)
-					continue;
-
-				vec2 vec = (tmpEnergy(p) / img(p));
-				vec2 dst = vec2(p) + vec;
-
-				vec2 newEnergy = tmpEnergy(p);
-				for (int dim = 0; dim <= 1; dim++) {
-					if (dst[dim] >= sz[dim]) {
-						newEnergy[dim] *= -1.0f;
-						dst[dim] = sz[dim] - (dst[dim] - sz[dim]);
-					}
-				}
-				aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
-				aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
+			
+			auto offsets = empty_like(tmpEnergy);
+			forxy(offsets) {
+				offsets(p) = tmpEnergy(p) / img(p);
 			}
-			img = img3;
-			tmpEnergy = tmpEnergy3;
+			advect(*material, offsets);
 		}
+
+
 	}
 };
 
