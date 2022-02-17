@@ -25,8 +25,6 @@ struct Material {
 Material red, green;
 vector<Material*> materials{ &red, &green };
 float surfTensionThres;
-int bigVelocityCount;
-Array2D<float> bigVelocityImg(sx, sy, 0.0f);
 
 bool pause = false;
 
@@ -45,11 +43,6 @@ struct SApp : ci::app::App {
 	{
 		enableDenormalFlushToZero();
 
-		//vector<int> delme{ 0, 1, 2 };
-		//cout << ::accumulateTest(delme.begin(), delme.end(), 0) << endl;
-
-		//
-
 		disableGLReadClamp();
 		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
@@ -65,7 +58,6 @@ struct SApp : ci::app::App {
 		stefanUpdate();
 		stefanDraw();
 		stefanfw::endFrame();
-		cout << "bigVelocityCount=" << bigVelocityCount << "\n";
 	}
 	void keyDown(ci::app::KeyEvent e)
 	{
@@ -128,9 +120,9 @@ struct SApp : ci::app::App {
 		
 		auto grads = get_gradients_tex(tex);
 
-		auto tex2 = shade2(tex, grads, envMap, /*laplaceBGradientmapped*/ tex, redTex, greenTex,
-			"float redVal = fetch1(tex5);"
-			"float greenVal = fetch1(tex6);"
+		auto tex2 = shade2(tex, grads, envMap, redTex, greenTex,
+			"float redVal = fetch1(tex4);"
+			"float greenVal = fetch1(tex5);"
 
 			"vec2 grad = fetch2(tex2);"
 			"vec3 N = normalize(vec3(-grad.x, -grad.y, -1.0));"
