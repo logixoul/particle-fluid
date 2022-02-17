@@ -18,7 +18,12 @@ int scale = 4;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 ivec2 sz(sx, sy);
-Image img(sx, sy);
+struct Material {
+	Array2D<float> img = Array2D<float>(sx, sy);
+	Array2D<vec2> tmpEnergy = Array2D<vec2>(sx, sy);
+};
+Material red, green;
+vector<Material*> materials{ &red, &green };
 float surfTensionThres;
 int bigVelocityCount;
 Array2D<float> bigVelocityImg(sx, sy, 0.0f);
@@ -49,8 +54,6 @@ struct SApp : ci::app::App {
 		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
 
-		tmpEnergy = Array2D<vec2>(sx, sy);
-
 		vector<vec2> poss(sx*sy);
 		for (int i = 0; i < poss.size(); i++) {
 			poss[i] = vec2(i%sx, i / sx);
@@ -71,8 +74,11 @@ struct SApp : ci::app::App {
 		}
 		if (keys['r'])
 		{
-			std::fill(img.begin(), img.end(), 0.0f);
-			std::fill(tmpEnergy.begin(), tmpEnergy.end(), vec2());
+			std::fill(red.img.begin(), red.img.end(), 0.0f);
+			std::fill(red.tmpEnergy.begin(), red.tmpEnergy.end(), vec2());
+
+			std::fill(green.img.begin(), green.img.end(), 0.0f);
+			std::fill(green.tmpEnergy.begin(), green.tmpEnergy.end(), vec2());
 		}
 		if (keys['p'] || keys['2'])
 		{
@@ -94,30 +100,16 @@ struct SApp : ci::app::App {
 		direction = vec2(getMousePos()) - lastm;
 		lastm = getMousePos();
 	}
-	Array2D<float> img3;
-	Array2D<vec2> tmpEnergy3;
-	Array2D<vec2> tmpEnergy;
 	void stefanDraw()
 	{
 		gl::clear(Color(0, 0, 0));
 
 		gl::setMatricesWindow(getWindowSize(), false);
-		float limit = 65;
-		auto img5 = img.clone();
-		/*if (keys['9']) {
-			forxy(img5) {
-				img5(p) = length(tmpEnergy(p));
-			}
+		auto img = empty_like(red.img);
+		forxy(img) {
+			img(p) = red.img(p) + green.img(p);
 		}
-		*/
-		if (keys['0']) {
-			img5 = bigVelocityImg.clone();
-		}
-		float maxElement = *std::max_element(img5.begin(), img5.end());
-		//forxy(img5)img5(p) /= maxElement;
-		cout << "maxElement " << maxElement << "\n";
-
-		auto tex = gtex(img5);
+		auto tex = gtex(img);
 
 		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
 		
@@ -197,6 +189,8 @@ struct SApp : ci::app::App {
 			doFluidStep();
 
 		} // if ! pause
+		auto material = keys['g'] ? &green : &red;
+
 		if (mouseDown_[0])
 		{
 			vec2 scaledm = vec2(getMousePos()-getWindow()->getPos()) / float(::scale); //vec2(mouseX * (float)sx, mouseY * (float)sy);
@@ -210,7 +204,7 @@ struct SApp : ci::app::App {
 					vec2 v = vec2(x, y) - scaledm;
 					float w = max(0.0f, 1.0f - length(v) / r);
 					w = 3 * w * w - 2 * w * w * w;
-					img.wr(x, y) += 1.f * w *10.0;
+					material->img.wr(x, y) += 1.f * w *10.0;
 				}
 			}
 		}
@@ -227,8 +221,8 @@ struct SApp : ci::app::App {
 					vec2 v = vec2(x, y) - scaledm;
 					float w = max(0.0f, 1.0f - length(v) / r);
 					w = 3 * w * w - 2 * w * w * w;
-					if (img.wr(x, y) != 0.0f)
-						tmpEnergy.wr(x, y) += w * img.wr(x, y) * 4.0f * direction / (float)::scale;
+					if (material->img.wr(x, y) != 0.0f)
+						material->tmpEnergy.wr(x, y) += w * material->img.wr(x, y) * 4.0f * direction / (float)::scale;
 				}
 			}
 		}
@@ -257,7 +251,6 @@ struct SApp : ci::app::App {
 	}
 
 	void doFluidStep() {
-		bigVelocityCount = 0;
 		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
 			[&]() { return keys['6']; },
 			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
@@ -271,61 +264,59 @@ struct SApp : ci::app::App {
 			[&]() { return keys['\\']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
 
-		forxy(tmpEnergy)
-		{
-			tmpEnergy(p) += vec2(0.0f, gravity) * img(p);
-		}
+		for (auto material : ::materials) {
+			auto& tmpEnergy = material->tmpEnergy;
+			auto& img = material->img;
 
-		img = gauss3(img);
-		tmpEnergy = gauss3(tmpEnergy);
-
-		auto img_b = img.clone();
-		img_b = gaussianBlur<float, WrapModes::GetClamped>(img_b, 3 * 2 + 1);
-		//auto kernel = ::getGaussianKernel(13, ::sigmaFromKsize(13));
-		//img_b = ::separableConvolve<float, WrapModes::GetClamped>(img_b, kernel);
-		forxy(tmpEnergy)
-		{
-			//auto& guidance = img;
-			auto g = gradient_i<float, WrapModes::GetClamped>(img_b, p);
-			if (img_b(p) < surfTensionThres)
+			forxy(tmpEnergy)
 			{
-				g = safeNormalized(g) * surfTension;
+				tmpEnergy(p) += vec2(0.0f, gravity) * img(p);
 			}
-			else
+
+			img = gauss3(img);
+			tmpEnergy = gauss3(tmpEnergy);
+
+			auto img_b = img.clone();
+			img_b = gaussianBlur<float, WrapModes::GetClamped>(img_b, 3 * 2 + 1);
+			forxy(tmpEnergy)
 			{
-				g *= -incompressibilityCoef;
-			}
-
-			tmpEnergy(p) += g * img(p);
-		}
-		bigVelocityImg = zeros_like(bigVelocityImg);
-
-		img3 = Array2D<float>(sx, sy);
-		tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
-		forxy(img)
-		{
-			if (img(p) == 0.0f)
-				continue;
-
-			vec2 vec = (tmpEnergy(p) / img(p));
-			if (length(vec) > 20) {
-				bigVelocityCount++;
-				bigVelocityImg(p) = 1.0f;
-			}
-			vec2 dst = vec2(p) + vec;
-
-			vec2 newEnergy = tmpEnergy(p);
-			for (int dim = 0; dim <= 1; dim++) {
-				if (dst[dim] >= sz[dim]) {
-					newEnergy[dim] *= -1.0f;
-					dst[dim] = sz[dim] - (dst[dim] - sz[dim]);
+				//auto& guidance = img;
+				auto g = gradient_i<float, WrapModes::GetClamped>(img_b, p);
+				if (img_b(p) < surfTensionThres)
+				{
+					g = safeNormalized(g) * surfTension;
 				}
+				else
+				{
+					g *= -incompressibilityCoef;
+				}
+
+				tmpEnergy(p) += g * img(p);
 			}
-			aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
-			aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
+
+			auto img3 = Array2D<float>(sx, sy);
+			auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
+			forxy(img)
+			{
+				if (img(p) == 0.0f)
+					continue;
+
+				vec2 vec = (tmpEnergy(p) / img(p));
+				vec2 dst = vec2(p) + vec;
+
+				vec2 newEnergy = tmpEnergy(p);
+				for (int dim = 0; dim <= 1; dim++) {
+					if (dst[dim] >= sz[dim]) {
+						newEnergy[dim] *= -1.0f;
+						dst[dim] = sz[dim] - (dst[dim] - sz[dim]);
+					}
+				}
+				aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
+				aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
+			}
+			img = img3;
+			tmpEnergy = tmpEnergy3;
 		}
-		img = img3;
-		tmpEnergy = tmpEnergy3;
 	}
 };
 

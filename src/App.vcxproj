@@ -78,7 +78,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>Z:\stuff\Dev\referenced-ci0.9.2-overlay\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>I:\stuff\Dev\referenced-ci0.9.2-overlay\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_HAS_FEATURES_REMOVED_IN_CXX20;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -103,7 +103,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>cinder.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>Z:\stuff\Dev\referenced-ci0.9.2-overlay\lib64\Release;z:\stuff\Dev\referenced-ci0.9.2-overlay\lib64;$(TargetDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>I:\stuff\Dev\referenced-ci0.9.2-overlay\lib64\Release;I:\stuff\Dev\referenced-ci0.9.2-overlay\lib64;$(TargetDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
