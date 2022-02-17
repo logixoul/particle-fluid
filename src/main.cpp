@@ -150,11 +150,13 @@ struct SApp : ci::app::App {
 			"if(fetch1(tex) > surfTensionThres)"
 			"	c += getEnv(R) * 5.0;" // mul to tmp simulate one side of the envmap being brighter than the other
 
-			"vec3 laplaceShadedB = fetch3(tex4);"
-			"c += laplaceShadedB;"
+			//"vec3 laplaceShadedB = fetch3(tex4);"
+			//"c += laplaceShadedB;"
 
-			"c.r += redVal;"
-			"c.g += greenVal;"
+			//"c.r += redVal;"
+			//"c.g += greenVal;"
+			"if(redVal > greenVal) c.r += redVal;"
+			"else c.g += greenVal;"
 
 			"_out.rgb = c;"
 			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", surfTensionThres),
@@ -258,6 +260,16 @@ struct SApp : ci::app::App {
 		return dst2;
 	}
 
+	void repel(Material& a, Material& b) {
+		auto guidance = gaussianBlur<float, WrapModes::GetClamped>(b.img, 4 * 2 + 1);
+		forxy(a.img) {
+			auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
+			g = -safeNormalized(g) * .2f;
+
+			a.tmpEnergy(p) += g * a.img(p);
+		}
+	}
+
 	void doFluidStep() {
 		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
 			[&]() { return keys['6']; },
@@ -271,6 +283,10 @@ struct SApp : ci::app::App {
 		auto incompressibilityCoef = cfg1::getOpt("incompressibilityCoef", 1.0f,
 			[&]() { return keys['\\']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
+
+
+		repel(::red, ::green);
+		repel(::green, ::red);
 
 		for (auto material : ::materials) {
 			auto& tmpEnergy = material->tmpEnergy;
