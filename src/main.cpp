@@ -126,23 +126,6 @@ struct SApp : ci::app::App {
 			);
 		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
 		
-		/*auto laplacetex = get_laplace_tex(tex, GL_CLAMP_TO_BORDER);
-
-		laplacetex = shade2(laplacetex,
-			"float laplace = max(fetch1(tex), 0.0);"
-			"_out.rgb = vec3(laplace);"
-		);
-		auto laplacetexB = gpuBlur2_5::run_longtail(laplacetex, 4, 1.0f);
-
-		auto laplaceBGradientmapped = shade2(laplacetexB,
-			"float c = fetch1();"
-			"c *= 8.0;"
-			"c /= c + 1.0;"
-			// this is taken from https://www.shadertoy.com/view/Mld3Rn
-			"_out.rgb = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.)).zyx;"
-			, ShadeOpts().ifmt(GL_RGBA16F)
-		);*/
-
 		auto grads = get_gradients_tex(tex);
 
 		auto tex2 = shade2(tex, grads, envMap, /*laplaceBGradientmapped*/ tex, redTex, greenTex,
@@ -161,15 +144,11 @@ struct SApp : ci::app::App {
 			"if(fetch1(tex) > surfTensionThres)"
 			"	c += getEnv(R) * 5.0;" // mul to tmp simulate one side of the envmap being brighter than the other
 
-			//"vec3 laplaceShadedB = fetch3(tex4);"
-			//"c += laplaceShadedB;"
-
+			// this is taken from https://www.shadertoy.com/view/Mld3Rn
 			"vec3 redColor = vec3(min(redVal * 1.5, 1.), pow(redVal, 2.5), pow(redVal, 12.)); "
 			"vec3 greenColor = vec3(min(greenVal * 1.5, 1.), pow(greenVal, 2.5), pow(greenVal, 12.)).zyx; "
 			"c += redColor;"
 			"c += greenColor;"
-			//"if(redVal > greenVal) c.r += redVal;"
-			//"else c.g += greenVal;"
 
 			"_out.rgb = c;"
 			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", surfTensionThres),
