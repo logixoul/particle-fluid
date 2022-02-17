@@ -113,6 +113,17 @@ struct SApp : ci::app::App {
 		auto redTex = gtex(::red.img);
 		auto greenTex = gtex(::green.img);
 
+		auto redTexB = gpuBlur2_5::run_longtail(redTex, 4, 1.0f);
+		auto greenTexB = gpuBlur2_5::run_longtail(greenTex, 4, 1.0f);
+
+		redTex = shade2( redTex, redTexB, MULTILINE(
+			_out.r = (fetch1() + fetch1(tex2)) * .2;
+		)
+			);
+		greenTex = shade2(greenTex, greenTexB, MULTILINE(
+			_out.r = (fetch1() + fetch1(tex2)) * .2;
+		)
+			);
 		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
 		
 		/*auto laplacetex = get_laplace_tex(tex, GL_CLAMP_TO_BORDER);
@@ -153,8 +164,10 @@ struct SApp : ci::app::App {
 			//"vec3 laplaceShadedB = fetch3(tex4);"
 			//"c += laplaceShadedB;"
 
-			"c.r += redVal;"
-			"c.g += greenVal;"
+			"vec3 redColor = vec3(min(redVal * 1.5, 1.), pow(redVal, 2.5), pow(redVal, 12.)); "
+			"vec3 greenColor = vec3(min(greenVal * 1.5, 1.), pow(greenVal, 2.5), pow(greenVal, 12.)).zyx; "
+			"c += redColor;"
+			"c += greenColor;"
 			//"if(redVal > greenVal) c.r += redVal;"
 			//"else c.g += greenVal;"
 
@@ -261,13 +274,17 @@ struct SApp : ci::app::App {
 	}
 
 	void repel(Material& a, Material& b) {
+		auto offsets = empty_like(a.tmpEnergy);
+
 		auto guidance = gaussianBlur<float, WrapModes::GetClamped>(b.img, 4 * 2 + 1);
 		forxy(a.img) {
 			auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
 			g = -safeNormalized(g) * .2f;
 
 			a.tmpEnergy(p) += g * a.img(p);
+			//offsets(p) = g * a.img(p);
 		}
+		//advect(a, offsets);
 	}
 	void advect(Material& material, Array2D<vec2> offsets) {
 		auto& img = material.img;
@@ -280,7 +297,7 @@ struct SApp : ci::app::App {
 			if (img(p) == 0.0f)
 				continue;
 
-			vec2 vec = (tmpEnergy(p) / img(p));
+			vec2 vec = offsets(p);
 			vec2 dst = vec2(p) + vec;
 
 			vec2 newEnergy = tmpEnergy(p);
@@ -311,8 +328,10 @@ struct SApp : ci::app::App {
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
 
 
-		repel(::red, ::green);
-		repel(::green, ::red);
+		//for (int i = 0; i < 4; i++) {
+			repel(::red, ::green);
+			repel(::green, ::red);
+		//}
 
 		for (auto material : ::materials) {
 			auto& tmpEnergy = material->tmpEnergy;
