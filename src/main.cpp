@@ -100,25 +100,33 @@ struct SApp : ci::app::App {
 		auto redTex = gtex(::red.img);
 		auto greenTex = gtex(::green.img);
 
-		auto redTexB = gpuBlur2_5::run_longtail(redTex, 4, 1.0f);
-		auto greenTexB = gpuBlur2_5::run_longtail(greenTex, 4, 1.0f);
+		auto bloomSize = cfg1::getOpt("bloomSize", 1.0f,
+			[&]() { return keys['b']; },
+			[&]() { return mix(0.1, 8.0, mouseY); });
+		int bloomIters = cfg1::getOpt("bloomIters", 4.0f,
+			[&]() { return keys['B']; },
+			[&]() { return mix(1.0, 8.0, mouseY); });
+		float bloomIntensity = cfg1::getOpt("bloomIntensity", 0.2f,
+			[&]() { return keys['i']; },
+			[&]() { return mix(0.1, 8.0, mouseY); });
+		auto redTexB = gpuBlur2_5::run_longtail(redTex, bloomIters, bloomSize);
+		auto greenTexB = gpuBlur2_5::run_longtail(greenTex, bloomIters, bloomSize);
 
 		redTex = shade2( redTex, redTexB, MULTILINE(
-			_out.r = (fetch1() + fetch1(tex2)) * .2;
-		)
+			_out.r = (fetch1() + fetch1(tex2)) * bloomIntensity;
+		),
+			ShadeOpts().uniform("bloomIntensity", bloomIntensity)
 			);
 		greenTex = shade2(greenTex, greenTexB, MULTILINE(
-			_out.r = (fetch1() + fetch1(tex2)) * .2;
-		)
+			_out.r = (fetch1() + fetch1(tex2)) * bloomIntensity;
+		),
+			ShadeOpts().uniform("bloomIntensity", bloomIntensity)
 			);
 		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
 		
 		auto grads = get_gradients_tex(tex);
 
 		auto tex2 = shade2(tex, grads, envMap, redTex, greenTex,
-			"float redVal = fetch1(tex4);"
-			"float greenVal = fetch1(tex5);"
-
 			"vec2 grad = fetch2(tex2);"
 			"vec3 N = normalize(vec3(-grad.x, -grad.y, -1.0));"
 			"vec3 I=-normalize(vec3(tc.x-.5, tc.y-.5, 1.0));"
@@ -131,6 +139,10 @@ struct SApp : ci::app::App {
 			"if(fetch1(tex) > surfTensionThres)"
 			"	c += getEnv(R) * 5.0;" // mul to tmp simulate one side of the envmap being brighter than the other
 
+			"float redVal = fetch1(tex4);"
+			"float greenVal = fetch1(tex5);"
+			"redVal /= redVal + 1;"
+			"greenVal /= greenVal + 1;"
 			// this is taken from https://www.shadertoy.com/view/Mld3Rn
 			"vec3 redColor = vec3(min(redVal * 1.5, 1.), pow(redVal, 2.5), pow(redVal, 12.)); "
 			"vec3 greenColor = vec3(min(greenVal * 1.5, 1.), pow(greenVal, 2.5), pow(greenVal, 12.)).zyx; "
