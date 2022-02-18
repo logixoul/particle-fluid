@@ -141,8 +141,8 @@ struct SApp : ci::app::App {
 
 			"float redVal = fetch1(tex4);"
 			"float greenVal = fetch1(tex5);"
-			"redVal /= redVal + 1;"
-			"greenVal /= greenVal + 1;"
+			//"redVal /= redVal + 1;"
+			//"greenVal /= greenVal + 1;"
 			// this is taken from https://www.shadertoy.com/view/Mld3Rn
 			"vec3 redColor = vec3(min(redVal * 1.5, 1.), pow(redVal, 2.5), pow(redVal, 12.)); "
 			"vec3 greenColor = vec3(min(greenVal * 1.5, 1.), pow(greenVal, 2.5), pow(greenVal, 12.)).zyx; "
