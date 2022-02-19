@@ -123,6 +123,7 @@ struct SApp : ci::app::App {
 			ShadeOpts().uniform("bloomIntensity", bloomIntensity)
 			);
 		static auto envMap = gl::Texture::create(ci::loadImage(loadAsset("envmap2.png")));
+		//static auto envMap = gl::TextureCubeMap::create(loadImage(loadAsset("envmap_cube.jpg")), gl::TextureCubeMap::Format().mipmap());
 		
 		auto grads = get_gradients_tex(tex);
 
