@@ -15,9 +15,6 @@
     <ClCompile Include="lxlib\ConcurrentQueue.cpp">
       <Filter>lxlib</Filter>
     </ClCompile>
-    <ClCompile Include="lxlib\Constants.cpp">
-      <Filter>lxlib</Filter>
-    </ClCompile>
     <ClCompile Include="lxlib\CrossThreadCallQueue.cpp">
       <Filter>lxlib</Filter>
     </ClCompile>
@@ -91,9 +88,6 @@
       <Filter>lxlib</Filter>
     </ClInclude>
     <ClInclude Include="lxlib\ConcurrentQueue.h">
-      <Filter>lxlib</Filter>
-    </ClInclude>
-    <ClInclude Include="lxlib\Constants.h">
       <Filter>lxlib</Filter>
     </ClInclude>
     <ClInclude Include="lxlib\CrossThreadCallQueue.h">

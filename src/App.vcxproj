@@ -127,7 +127,6 @@
     <ClCompile Include="lxlib\cfg1.cpp" />
     <ClCompile Include="lxlib\colorspaces.cpp" />
     <ClCompile Include="lxlib\ConcurrentQueue.cpp" />
-    <ClCompile Include="lxlib\Constants.cpp" />
     <ClCompile Include="lxlib\CrossThreadCallQueue.cpp" />
     <ClCompile Include="lxlib\cvstuff.cpp" />
     <ClCompile Include="lxlib\easyfft.cpp">
@@ -182,7 +181,6 @@
     <ClInclude Include="lxlib\cfg1.h" />
     <ClInclude Include="lxlib\colorspaces.h" />
     <ClInclude Include="lxlib\ConcurrentQueue.h" />
-    <ClInclude Include="lxlib\Constants.h" />
     <ClInclude Include="lxlib\CrossThreadCallQueue.h" />
     <ClInclude Include="lxlib\cvstuff.h" />
     <ClInclude Include="lxlib\easyfft.h">
