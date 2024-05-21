@@ -1,16 +1,16 @@
 #include "precompiled.h"
-#include "lxlib/using_namespace.h"
-#include "lxlib/stuff.h"
-#include "lxlib/shade.h"
-#include "lxlib/gpgpu.h"
-#include "lxlib/gpuBlur2_5.h"
-#include "lxlib/stefanfw.h"
-#include "lxlib/Array2D_imageProc.h"
-#include "lxlib/cfg1.h"
-#include "lxlib/CrossThreadCallQueue.h"
+//#include "using_namespace.h"
+#include "stuff.h"
+#include "shade.h"
+#include "gpgpu.h"
+#include "gpuBlur2_5.h"
+#include "stefanfw.h"
+#include "Array2D_imageProc.h"
+#include "cfg1.h"
+#include "CrossThreadCallQueue.h"
 //#include "MyVideoWriter.h"
 
-import util;
+#include "util.h"
 
 typedef Array2D<float> Image;
 int wsx = 1280, wsy = 720;
@@ -204,7 +204,7 @@ struct SApp : ci::app::App {
 				for (int y = a.y1; y <= a.y2; y++)
 				{
 					vec2 v = vec2(x, y) - scaledm;
-					float w = max(0.0f, 1.0f - length(v) / r);
+					float w = std::max(0.0f, 1.0f - length(v) / r);
 					w = 3 * w * w - 2 * w * w * w;
 					material->img.wr(x, y) += 1.f * w *10.0;
 				}
@@ -221,7 +221,7 @@ struct SApp : ci::app::App {
 				for (int y = a.y1; y <= a.y2; y++)
 				{
 					vec2 v = vec2(x, y) - scaledm;
-					float w = max(0.0f, 1.0f - length(v) / r);
+					float w = std::max(0.0f, 1.0f - length(v) / r);
 					w = 3 * w * w - 2 * w * w * w;
 					if (material->img.wr(x, y) != 0.0f)
 						material->tmpEnergy.wr(x, y) += w * material->img.wr(x, y) * 4.0f * direction / (float)::scale;
@@ -293,7 +293,7 @@ struct SApp : ci::app::App {
 		tmpEnergy = tmpEnergy3;
 	}
 	void doFluidStep() {
-		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
+		surfTensionThres = cfg1::getOptDBG("surfTensionThres", .04f,
 			[&]() { return keys['6']; },
 			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
 		auto surfTension = cfg1::getOpt("surfTension", 1.0f,

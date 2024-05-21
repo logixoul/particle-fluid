@@ -22,6 +22,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <complex>
+#undef min
+#undef max
 #include <cinder/ip/Resize.h>
 #include <cinder/app/App.h>
 #include <cinder/app/RendererGl.h>
@@ -35,14 +38,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <glm/gtx/io.hpp>
-
-
-//#include <glm/gtx/matrix_transform_2d.hpp>
-//#include <fftw3.h>
+using namespace glm;
+using namespace std;
+using namespace ci;
+using namespace ci::app;
+using namespace std::experimental;
+#include <glm/gtx/matrix_transform_2d.hpp>
+#include <fftw3.h>
 
 //#include <tuple>
 #include <queue>
-//#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc.hpp>
 //#include <thread>
 
 
+typedef gl::TextureRef Tex;
