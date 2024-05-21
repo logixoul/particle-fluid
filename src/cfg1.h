@@ -4,9 +4,6 @@
 class cfg1
 {
 public:
-	static float getOptDBG(string name, float defaultVal, std::function<bool()> shouldUpdate, std::function<float()> getVal) {
-		return 0;
-	}
 	static float getOpt(string name, float defaultVal, std::function<bool()> shouldUpdate, std::function<float()> getVal) {
 		if(opts.find(name) == opts.end()) {
 			Opt opt1;
@@ -23,11 +20,11 @@ public:
 		return opt.val;
 	}
 	static void print() {
-		cout << "============ CFG values ============";
+		cout << "============ CFG values ============" << endl;
 		for(auto& pair : opts) {
 			auto& key=pair.first;
 			auto opt = opts[key];
-			cout << opt.name << " = " << opt.val;
+			cout << opt.name << " = " << opt.val << endl;
 		}
 	}
 private:

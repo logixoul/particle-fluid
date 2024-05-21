@@ -28,6 +28,8 @@ float surfTensionThres;
 
 bool pause = false;
 
+Array2D<float> bounces_dbg;
+
 
 void updateConfig() {
 }
@@ -53,6 +55,7 @@ struct SApp : ci::app::App {
 	}
 	void update()
 	{
+		bounces_dbg = Array2D<float>(sx, sy, 0);
 		stefanfw::beginFrame();
 		stefanUpdate();
 		stefanDraw();
@@ -181,11 +184,39 @@ struct SApp : ci::app::App {
 			"_out.rgb = c;"
 		);
 
-		/*tex2 = shade2(tex,
-			"float c = fetch1()*1000;"
-			"_out.rgb = vec3(c);", ShadeOpts().ifmt(GL_RGB16F));
-		tex2 = ::get_laplace_tex(tex2, GL_CLAMP_TO_BORDER);*/
+		if (0) {
+			tex2 = shade2(tex,
+				"float c = fetch1()*1000;"
+				"_out.rgb = vec3(c);", ShadeOpts().ifmt(GL_RGB16F));
+			tex2 = ::get_laplace_tex(tex2, GL_CLAMP_TO_BORDER);
+		}
+		else if(0){
+			auto img_b = gaussianBlur<float, WrapModes::GetClamped>(img, 3 * 2 + 1);
+			auto& guidance = img;
+			auto toDraw = zeros_like(img);
+			forxy(toDraw)
+			{
+				if (p.x == 0)
+					continue;
+				if (p.y == 0)
+					continue;
+				if (p.y == toDraw.w - 1)
+					continue;
+				if (p.y == toDraw.h - 1)
+					continue;
+				auto g = gradient_i<float, WrapModes::NoWrap>(guidance, p);
+				toDraw(p) = g.y;
+			}
+			//toDraw = bounces_dbg;
+			tex2 = gtex(toDraw);
+			tex2 = shade2(tex2, "float c = fetch1()*100;"
+				"if(c<0) _out.rgb = vec3(-c,0,0);"
+				"else _out.rgb = vec3(0,0,c);",
+				ShadeOpts().ifmt(GL_RGB8));
+			tex2->setMagFilter(GL_NEAREST);
+		}
 		//videoWriter->write(tex2);
+		
 		gl::draw(tex2, getWindowBounds());
 	}
 	void stefanUpdate()
@@ -258,6 +289,7 @@ struct SApp : ci::app::App {
 	}
 
 	void repel(Material& a, Material& b) {
+		throw 0;
 		auto offsets = empty_like(a.tmpEnergy);
 
 		auto guidance = gaussianBlur<float, WrapModes::GetClamped>(b.img, 4 * 2 + 1);
@@ -277,37 +309,47 @@ struct SApp : ci::app::App {
 		auto img3 = Array2D<float>(sx, sy);
 		auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
 		int count = 0;
+		float avgOffsetY = 0; float div = 0;
 		forxy(img)
 		{
 			if (img(p) == 0.0f)
 				continue;
 
 			vec2 offset = offsets(p);
+			avgOffsetY += abs(offset.y); div++;
 			vec2 dst = vec2(p) + offset;
 
 			vec2 newEnergy = tmpEnergy(p);
+			bool bounced = false;
 			for (int dim = 0; dim <= 1; dim++) {
 				float maxVal = sz[dim] - 1;
-				if (dst[dim] >= maxVal) {
+				if (dst[dim] > maxVal) {
 					newEnergy[dim] *= -1.0f;
 					dst[dim] = maxVal - (dst[dim] - maxVal);
+					//if(dim==1)
+						//cout << "dst[dim]=" << dst[dim] << endl;
+					bounced = true;
 				}
 				if (dst[dim] < 0) {
 					newEnergy[dim] *= -1.0f;
 					dst[dim] = -dst[dim];
+					bounced = true;
 				}
 			}
 			if (dst.y >= sz.y-1)
 				count++;
+			if(bounced)
+				aaPoint<float, WrapModes::NoWrap>(bounces_dbg, dst, 1);
 			aaPoint<float, WrapModes::NoWrap>(img3, dst, img(p));
 			aaPoint<vec2, WrapModes::NoWrap>(tmpEnergy3, dst, newEnergy);
 		}
-		cout << "bugged=" << count << endl;
+		//cout << "bugged=" << count << endl;
+		//cout << "avgOffsetY=" << avgOffsetY/div << endl;
 		img = img3;
 		tmpEnergy = tmpEnergy3;
 	}
 	void doFluidStep() {
-		surfTensionThres = cfg1::getOptDBG("surfTensionThres", .04f,
+		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
 			[&]() { return keys['6']; },
 			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
 		auto surfTension = cfg1::getOpt("surfTension", 1.0f,
@@ -322,8 +364,8 @@ struct SApp : ci::app::App {
 
 
 		//for (int i = 0; i < 4; i++) {
-			repel(::red, ::green);
-			repel(::green, ::red);
+			//repel(::red, ::green);
+			//repel(::green, ::red);
 		//}
 
 		for (auto material : ::materials) {
@@ -340,10 +382,19 @@ struct SApp : ci::app::App {
 
 			auto img_b = img.clone();
 			img_b = gaussianBlur<float, WrapModes::GetClamped>(img_b, 3 * 2 + 1);
+			auto& guidance = img_b;
 			forxy(tmpEnergy)
 			{
-				//auto& guidance = img;
-				auto g = gradient_i<float, WrapModes::GetClamped>(img_b, p);
+				if (p.x == tmpEnergy.w - 1)
+					continue;
+				if (p.y == tmpEnergy.h-1)
+					continue;
+				if (p.x == 0)
+					continue;
+				if (p.y == 0)
+					continue;
+				
+				auto g = gradient_i<float, WrapModes::NoWrap>(guidance, p);
 				if (img_b(p) < surfTensionThres)
 				{
 					g = safeNormalized(g) * surfTension;
