@@ -46,6 +46,10 @@ struct SApp : ci::app::App {
 		disableGLReadClamp();
 		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
+
+		// focus
+		getWindow()->setAlwaysOnTop(true);
+		getWindow()->setAlwaysOnTop(false);
 	}
 	void update()
 	{
