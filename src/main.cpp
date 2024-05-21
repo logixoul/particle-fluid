@@ -195,7 +195,8 @@ struct SApp : ci::app::App {
 
 		if (mouseDown_[0])
 		{
-			vec2 scaledm = vec2(getMousePos()-getWindow()->getPos()) / float(::scale); //vec2(mouseX * (float)sx, mouseY * (float)sy);
+			//vec2 scaledm = vec2(getMousePos()-getWindow()->getPos()) / float(::scale); //vec2(mouseX * (float)sx, mouseY * (float)sy);
+			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 			Area a(scaledm, scaledm);
 			int r = 80 / pow(2, ::scale);
 			a.expand(r, r);
