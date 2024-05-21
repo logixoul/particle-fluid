@@ -181,10 +181,10 @@ struct SApp : ci::app::App {
 			"_out.rgb = c;"
 		);
 
-		if (0)tex2 = shade2(tex,
-			"float c = fetch1();"
-			"_out.r = c;");
-		
+		/*tex2 = shade2(tex,
+			"float c = fetch1()*1000;"
+			"_out.rgb = vec3(c);", ShadeOpts().ifmt(GL_RGB16F));
+		tex2 = ::get_laplace_tex(tex2, GL_CLAMP_TO_BORDER);*/
 		//videoWriter->write(tex2);
 		gl::draw(tex2, getWindowBounds());
 	}
@@ -276,24 +276,33 @@ struct SApp : ci::app::App {
 
 		auto img3 = Array2D<float>(sx, sy);
 		auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
+		int count = 0;
 		forxy(img)
 		{
 			if (img(p) == 0.0f)
 				continue;
 
-			vec2 vec = offsets(p);
-			vec2 dst = vec2(p) + vec;
+			vec2 offset = offsets(p);
+			vec2 dst = vec2(p) + offset;
 
 			vec2 newEnergy = tmpEnergy(p);
 			for (int dim = 0; dim <= 1; dim++) {
-				if (dst[dim] >= sz[dim]) {
+				float maxVal = sz[dim] - 1;
+				if (dst[dim] >= maxVal) {
 					newEnergy[dim] *= -1.0f;
-					dst[dim] = sz[dim] - (dst[dim] - sz[dim]);
+					dst[dim] = maxVal - (dst[dim] - maxVal);
+				}
+				if (dst[dim] < 0) {
+					newEnergy[dim] *= -1.0f;
+					dst[dim] = -dst[dim];
 				}
 			}
-			aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
-			aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
+			if (dst.y >= sz.y-1)
+				count++;
+			aaPoint<float, WrapModes::NoWrap>(img3, dst, img(p));
+			aaPoint<vec2, WrapModes::NoWrap>(tmpEnergy3, dst, newEnergy);
 		}
+		cout << "bugged=" << count << endl;
 		img = img3;
 		tmpEnergy = tmpEnergy3;
 	}
