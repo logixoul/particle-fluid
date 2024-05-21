@@ -13,7 +13,7 @@
 #include "util.h"
 
 typedef Array2D<float> Image;
-int wsx = 700, wsy = 500;
+int wsx = 600, wsy = 400;
 int scale = 4;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
