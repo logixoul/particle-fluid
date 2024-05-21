@@ -41,9 +41,9 @@ namespace stefanfw {
 		wsx = app->getWindowWidth();
 		wsy = app->getWindowHeight();
 
-		auto relMousePos = app->getMousePos();
-		::mouseX = relMousePos.x / (float)app->getDisplay()->getWidth();
-		::mouseY = relMousePos.y / (float)app->getDisplay()->getHeight();
+		auto relMousePos = app->getMousePos()-app->getWindowPos();
+		::mouseX = relMousePos.x / (float)app->getWindow()->getWidth();
+		::mouseY = relMousePos.y / (float)app->getWindow()->getHeight();
 	}
 
 	void endFrame() {
