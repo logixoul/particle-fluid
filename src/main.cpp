@@ -266,39 +266,6 @@ struct SApp : ci::app::App {
 		}
 	}
 
-	template<class T>
-	static Array2D<T> gauss3_weightAdjusting(Array2D<T> src) {
-		T zero = ::zero<T>();
-		Array2D<T> dst1(src.w, src.h);
-		Array2D<T> dst2(src.w, src.h);
-		forxy(dst1) {
-			dst1(p) = .25f * (2.0f * get_clamped(src, p.x, p.y) + get_clamped(src, p.x - 1, p.y) + get_clamped(src, p.x + 1, p.y));
-		}
-		forxy(dst2) {
-			vector<float> weights = { .25, .5, .25 };
-			if (p.y == 0) weights[0] = 0.0f;
-			if (p.y == src.h - 1) weights[2] = 0.0f;
-			float sumW = ::accumulate(weights.begin(), weights.end(), 0.0f);
-			for (auto& weight : weights) weight /= sumW;
-			dst2(p) = weights[1] * get_clamped(dst1, p.x, p.y) + weights[0] * get_clamped(dst1, p.x, p.y - 1) + weights[2] * get_clamped(dst1, p.x, p.y + 1);
-		}
-		return dst2;
-	}
-
-	void repel(Material& a, Material& b) {
-		throw 0;
-		auto offsets = empty_like(a.tmpEnergy);
-
-		auto guidance = gaussianBlur<float, WrapModes::GetClamped>(b.img, 4 * 2 + 1);
-		forxy(a.img) {
-			auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
-			g = -safeNormalized(g) * .2f;
-
-			a.tmpEnergy(p) += g * a.img(p);
-			//offsets(p) = g * a.img(p);
-		}
-		//advect(a, offsets);
-	}
 	void advect(Material& material, Array2D<vec2> offsets) {
 		auto& img = material.img;
 		auto& tmpEnergy = material.tmpEnergy;
