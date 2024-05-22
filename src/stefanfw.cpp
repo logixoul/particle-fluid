@@ -49,7 +49,7 @@ namespace stefanfw {
 	void endFrame() {
 		sw::endFrame();
 		TimerManager::update();
-		//cfg1::print();
+		cfg1::print();
 	}
 
 	// todo make this take ref

@@ -186,9 +186,9 @@ struct SApp : ci::app::App {
 
 		if (0) {
 			tex2 = shade2(tex,
-				"float c = fetch1()*1000;"
+				"float c = fetch1()*mouse.y;"
 				"_out.rgb = vec3(c);", ShadeOpts().ifmt(GL_RGB16F));
-			tex2 = ::get_laplace_tex(tex2, GL_CLAMP_TO_BORDER);
+			//tex2 = ::get_laplace_tex(tex2, GL_CLAMP_TO_BORDER);
 		}
 		else if(0){
 			auto img_b = gaussianBlur<float, WrapModes::GetClamped>(img, 3 * 2 + 1);
@@ -264,9 +264,6 @@ struct SApp : ci::app::App {
 				}
 			}
 		}
-
-		//if (pause)
-		//	Sleep(50);
 	}
 
 	template<class T>
@@ -309,14 +306,14 @@ struct SApp : ci::app::App {
 		auto img3 = Array2D<float>(sx, sy);
 		auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
 		int count = 0;
-		float avgOffsetY = 0; float div = 0;
+		float sumOffsetY = 0; float div = 0;
 		forxy(img)
 		{
 			if (img(p) == 0.0f)
 				continue;
 
 			vec2 offset = offsets(p);
-			avgOffsetY += abs(offset.y); div++;
+			sumOffsetY += abs(offset.y); div++;
 			vec2 dst = vec2(p) + offset;
 
 			vec2 newEnergy = tmpEnergy(p);
@@ -338,13 +335,13 @@ struct SApp : ci::app::App {
 			}
 			if (dst.y >= sz.y-1)
 				count++;
-			if(bounced)
-				aaPoint<float, WrapModes::NoWrap>(bounces_dbg, dst, 1);
-			aaPoint<float, WrapModes::NoWrap>(img3, dst, img(p));
-			aaPoint<vec2, WrapModes::NoWrap>(tmpEnergy3, dst, newEnergy);
+			//if(bounced)
+			//	aaPoint<float, WrapModes::NoWrap>(bounces_dbg, dst, 1);
+			aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
+			aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
 		}
 		//cout << "bugged=" << count << endl;
-		//cout << "avgOffsetY=" << avgOffsetY/div << endl;
+		//cout << "sumOffsetY=" << sumOffsetY/div << endl;
 		img = img3;
 		tmpEnergy = tmpEnergy3;
 	}
@@ -359,7 +356,7 @@ struct SApp : ci::app::App {
 			[&]() { return keys['8']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
 		auto incompressibilityCoef = cfg1::getOpt("incompressibilityCoef", 1.0f,
-			[&]() { return keys['\\']; },
+			[&]() { return keys['/']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
 
 
@@ -385,26 +382,28 @@ struct SApp : ci::app::App {
 			auto& guidance = img_b;
 			forxy(tmpEnergy)
 			{
-				if (p.x == tmpEnergy.w - 1)
+				/*if (p.x == tmpEnergy.w - 1)
 					continue;
 				if (p.y == tmpEnergy.h-1)
 					continue;
 				if (p.x == 0)
 					continue;
 				if (p.y == 0)
-					continue;
+					continue;*/
 				
-				auto g = gradient_i<float, WrapModes::NoWrap>(guidance, p);
+				//auto g = gradient_i<float, WrapModes::NoWrap>(guidance, p);
+				auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
 				if (img_b(p) < surfTensionThres)
 				{
-					g = safeNormalized(g) * surfTension;
+					// todo: move the  "* img(p)" back outside the if.
+					g = safeNormalized(g) * surfTension * img(p);
 				}
 				else
 				{
 					g *= -incompressibilityCoef;
 				}
 
-				tmpEnergy(p) += g * img(p);
+				tmpEnergy(p) += g;
 			}
 			
 			auto offsets = empty_like(tmpEnergy);
