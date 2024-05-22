@@ -13,7 +13,7 @@
 #include "util.h"
 
 typedef Array2D<float> Image;
-int wsx = 600, wsy = 400;
+int wsx = 400, wsy = 400;
 int scale = 4;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
@@ -30,6 +30,24 @@ bool pause = false;
 
 Array2D<float> bounces_dbg;
 
+template<class T, class FetchFunc>
+static Array2D<T> gauss3_forwardMapping(Array2D<T> src) {
+	T zero = ::zero<T>();
+	Array2D<T> dst1(src.w, src.h);
+	Array2D<T> dst2(src.w, src.h);
+	forxy(dst1) {
+		dst1(p) = .25f * (2.0f * FetchFunc::fetch(src, p.x, p.y) + get_clamped(src, p.x - 1, p.y) + FetchFunc::fetch(src, p.x + 1, p.y));
+	}
+	forxy(dst1) {
+		//vector<float> weights = { .25, .5, .25 };
+		//auto one = T(1);
+		FetchFunc::fetch(dst2, p.x, p.y - 1) += .25f * dst1(p);
+		FetchFunc::fetch(dst2, p.x, p.y) += .5f * dst1(p);
+		FetchFunc::fetch(dst2, p.x, p.y + 1) += .25f * dst1(p);
+		
+	}
+	return dst2;
+}
 
 void updateConfig() {
 }
@@ -48,6 +66,8 @@ struct SApp : ci::app::App {
 		disableGLReadClamp();
 		stefanfw::eventHandler.subscribeToEvents(*this);
 		setWindowSize(wsx, wsy);
+
+		reset();
 
 		// focus
 		getWindow()->setAlwaysOnTop(true);
@@ -68,15 +88,24 @@ struct SApp : ci::app::App {
 		}
 		if (keys['r'])
 		{
-			std::fill(red.img.begin(), red.img.end(), 0.0f);
-			std::fill(red.tmpEnergy.begin(), red.tmpEnergy.end(), vec2());
-
-			std::fill(green.img.begin(), green.img.end(), 0.0f);
-			std::fill(green.tmpEnergy.begin(), green.tmpEnergy.end(), vec2());
+			reset();
 		}
 		if (keys['p'] || keys['2'])
 		{
 			pause = !pause;
+		}
+	}
+	void reset() {
+		std::fill(red.img.begin(), red.img.end(), 0.0f);
+		std::fill(red.tmpEnergy.begin(), red.tmpEnergy.end(), vec2());
+
+		std::fill(green.img.begin(), green.img.end(), 0.0f);
+		std::fill(green.tmpEnergy.begin(), green.tmpEnergy.end(), vec2());
+
+		for (int x = 0; x < sz.x; x++) {
+			for (int y = sz.y *.75; y < sz.y; y++) {
+				//red.img(x, y) = 1;
+			}
 		}
 	}
 	vec2 direction;
@@ -185,35 +214,51 @@ struct SApp : ci::app::App {
 		);
 
 		if (0) {
-			tex2 = shade2(tex,
-				"float c = fetch1()*mouse.y;"
-				"_out.rgb = vec3(c);", ShadeOpts().ifmt(GL_RGB16F));
+			//auto toDraw = img.clone();
+			auto imgLocal = img.clone();//Array2D<float>(30, 30);
+			imgLocal(15, 29) = 10;
+			imgLocal(15, 28) = 9;
+			imgLocal(15, 27) = 8;
+			imgLocal(15, 26) = 7;
+			//imgLocal(15, 25) = 6;
+			auto toDraw = Array2D<vec3>(imgLocal.Size());
+			forxy(toDraw) {
+				if (imgLocal(p) < surfTensionThres) {
+					toDraw(p).r = getElapsedFrames() % 2;
+					continue;
+				}
+				auto g = gradient_i<float, WrapModes::GetClamped>(imgLocal, p);
+				if (g.y < 0) {
+					toDraw(p).r = -g.y;
+					//toDraw(p) = std::log(toDraw(p) * 10);
+				}
+				else if (g.y > 0) toDraw(p).g = g.y;
+				else toDraw(p).b = 1;
+			}
+			cout << "bottommost g val = " << toDraw(imgLocal.w / 2, imgLocal.h - 1) << endl;
+			cout << "the one above that = " << toDraw(imgLocal.w / 2, imgLocal.h - 2) << endl;
+			cout << "the one above that = " << toDraw(imgLocal.w / 2, imgLocal.h - 3) << endl;
+			cout << "the one above that = " << toDraw(imgLocal.w / 2, imgLocal.h - 4) << endl;
+			//::mm("todraw", toDraw);
+			//toDraw = ::to01(toDraw);
+			
+			tex2 = gtex(toDraw);
+			tex2 = shade2(tex2,
+				"vec3 c = fetch3()*mouse.x*1000;"
+				"_out.rgb = c;", ShadeOpts().ifmt(GL_RGB16F));
+			//tex2 = ::get_gradients_tex(tex2, GL_CLAMP_TO_BORDER);
 			//tex2 = ::get_laplace_tex(tex2, GL_CLAMP_TO_BORDER);
+			tex2->setMagFilter(GL_NEAREST);
 		}
 		else if(0){
-			auto img_b = gaussianBlur<float, WrapModes::GetClamped>(img, 3 * 2 + 1);
-			auto& guidance = img;
-			auto toDraw = zeros_like(img);
-			forxy(toDraw)
-			{
-				if (p.x == 0)
-					continue;
-				if (p.y == 0)
-					continue;
-				if (p.y == toDraw.w - 1)
-					continue;
-				if (p.y == toDraw.h - 1)
-					continue;
-				auto g = gradient_i<float, WrapModes::NoWrap>(guidance, p);
-				toDraw(p) = g.y;
-			}
-			//toDraw = bounces_dbg;
-			tex2 = gtex(toDraw);
-			tex2 = shade2(tex2, "float c = fetch1()*100;"
-				"if(c<0) _out.rgb = vec3(-c,0,0);"
-				"else _out.rgb = vec3(0,0,c);",
-				ShadeOpts().ifmt(GL_RGB8));
+			tex2 = gtex(img);
+			tex2 = shade2(tex2,
+				"vec3 c = vec3(fetch1())*mouse.x*1;"
+				"_out.rgb = c;", ShadeOpts().ifmt(GL_RGB16F));
 			tex2->setMagFilter(GL_NEAREST);
+			cout << "bottommost img val = " << img(img.w / 2, img.h - 1) << endl;
+			cout << "the one above that = " << img(img.w / 2, img.h - 2) << endl;
+
 		}
 		//videoWriter->write(tex2);
 		
@@ -266,52 +311,6 @@ struct SApp : ci::app::App {
 		}
 	}
 
-	void advect(Material& material, Array2D<vec2> offsets) {
-		auto& img = material.img;
-		auto& tmpEnergy = material.tmpEnergy;
-
-		auto img3 = Array2D<float>(sx, sy);
-		auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
-		int count = 0;
-		float sumOffsetY = 0; float div = 0;
-		forxy(img)
-		{
-			if (img(p) == 0.0f)
-				continue;
-
-			vec2 offset = offsets(p);
-			sumOffsetY += abs(offset.y); div++;
-			vec2 dst = vec2(p) + offset;
-
-			vec2 newEnergy = tmpEnergy(p);
-			bool bounced = false;
-			for (int dim = 0; dim <= 1; dim++) {
-				float maxVal = sz[dim] - 1;
-				if (dst[dim] > maxVal) {
-					newEnergy[dim] *= -1.0f;
-					dst[dim] = maxVal - (dst[dim] - maxVal);
-					//if(dim==1)
-						//cout << "dst[dim]=" << dst[dim] << endl;
-					bounced = true;
-				}
-				if (dst[dim] < 0) {
-					newEnergy[dim] *= -1.0f;
-					dst[dim] = -dst[dim];
-					bounced = true;
-				}
-			}
-			if (dst.y >= sz.y-1)
-				count++;
-			//if(bounced)
-			//	aaPoint<float, WrapModes::NoWrap>(bounces_dbg, dst, 1);
-			aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
-			aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
-		}
-		//cout << "bugged=" << count << endl;
-		//cout << "sumOffsetY=" << sumOffsetY/div << endl;
-		img = img3;
-		tmpEnergy = tmpEnergy3;
-	}
 	void doFluidStep() {
 		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
 			[&]() { return keys['6']; },
@@ -341,10 +340,11 @@ struct SApp : ci::app::App {
 				tmpEnergy(p) += vec2(0.0f, gravity) * img(p);
 			}
 
-			img = gauss3(img);
-			tmpEnergy = gauss3(tmpEnergy);
+			img = gauss3_forwardMapping<float, WrapModes::GetClamped>(img);
+			tmpEnergy = gauss3_forwardMapping<vec2, WrapModes::GetClamped>(tmpEnergy);
 
 			auto img_b = img.clone();
+			//for(int i < 0
 			img_b = gaussianBlur<float, WrapModes::GetClamped>(img_b, 3 * 2 + 1);
 			auto& guidance = img_b;
 			forxy(tmpEnergy)
@@ -359,11 +359,13 @@ struct SApp : ci::app::App {
 					continue;*/
 				
 				//auto g = gradient_i<float, WrapModes::NoWrap>(guidance, p);
-				auto g = gradient_i<float, WrapModes::GetClamped>(guidance, p);
+				auto g = gradient_i<float, WrapModes::Get_WrapZeros>(guidance, p);
 				if (img_b(p) < surfTensionThres)
 				{
 					// todo: move the  "* img(p)" back outside the if.
-					g = safeNormalized(g) * surfTension * img(p);
+					// todo: readd the safeNormalized()
+					//g = safeNormalized(g) * surfTension * img(p);
+					g = g * surfTension * img(p);
 				}
 				else
 				{
@@ -381,6 +383,52 @@ struct SApp : ci::app::App {
 		}
 
 
+	}
+	void advect(Material& material, Array2D<vec2> offsets) {
+		auto& img = material.img;
+		auto& tmpEnergy = material.tmpEnergy;
+
+		auto img3 = Array2D<float>(sx, sy);
+		auto tmpEnergy3 = Array2D<vec2>(sx, sy, vec2());
+		int count = 0;
+		float sumOffsetY = 0; float div = 0;
+		forxy(img)
+		{
+			if (img(p) == 0.0f)
+				continue;
+
+			vec2 offset = offsets(p);
+			sumOffsetY += abs(offset.y); div++;
+			vec2 dst = vec2(p) + offset;
+
+			vec2 newEnergy = tmpEnergy(p);
+			bool bounced = false;
+			for (int dim = 0; dim <= 1; dim++) {
+				float maxVal = sz[dim]-1;
+				if (dst[dim] > maxVal) {
+					newEnergy[dim] *= -1.0f;
+					dst[dim] = maxVal - (dst[dim] - maxVal);
+					//if(dim==1)
+						//cout << "dst[dim]=" << dst[dim] << endl;
+					bounced = true;
+				}
+				if (dst[dim] < 0) {
+					newEnergy[dim] *= -1.0f;
+					dst[dim] = -dst[dim];
+					bounced = true;
+				}
+			}
+			if (dst.y >= sz.y - 1)
+				count++;
+			//if(bounced)
+			//	aaPoint<float, WrapModes::NoWrap>(bounces_dbg, dst, 1);
+			aaPoint<float, WrapModes::GetClamped>(img3, dst, img(p));
+			aaPoint<vec2, WrapModes::GetClamped>(tmpEnergy3, dst, newEnergy);
+		}
+		//cout << "bugged=" << count << endl;
+		//cout << "sumOffsetY=" << sumOffsetY/div << endl;
+		img = img3;
+		tmpEnergy = tmpEnergy3;
 	}
 };
 

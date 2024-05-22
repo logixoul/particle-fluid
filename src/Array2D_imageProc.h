@@ -171,7 +171,7 @@ T& get_wrapZeros(Array2D<T>& src, int x, int y)
 {
 	if (x < 0 || y < 0 || x >= src.w || y >= src.h)
 	{
-		return zero<T>();
+		return ::zero<T>();
 	}
 	return src(x, y);
 }
