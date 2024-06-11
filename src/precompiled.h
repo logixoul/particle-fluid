@@ -33,11 +33,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <cinder/gl/Fbo.h>
 #include <cinder/gl/gl.h>
 #include <cinder/ImageIo.h> // todo rm?
+#include <cinder/params/Params.h>
+
 //#include <cinder/Vector.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <glm/gtx/io.hpp>
+
 using namespace glm;
 using namespace std;
 using namespace ci;

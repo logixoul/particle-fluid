@@ -8,6 +8,7 @@
 #include "Array2D_imageProc.h"
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
+#include "getOpt.h"
 //#include "MyVideoWriter.h"
 
 #include "util.h"
@@ -18,8 +19,6 @@ int scale = 2;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 ivec2 sz(sx, sy);
-
-float surfTensionThres;
 
 struct Particle {
 	vec2 pos;
@@ -49,102 +48,98 @@ const static float VISC_LAP = 40.f / (M_PI * pow(H, 5.f));
 const static float EPS = H; // boundary epsilon
 const static float BOUND_DAMPING = -0.5f;
 
-struct Material {
-	//Array2D<float> img = Array2D<float>(sx, sy);
-	vector<Particle> particles;
+vector<Particle> particles;
 
-	void reset() {
-		particles.clear();
-	}
+void reset() {
+	particles.clear();
+}
 
-	void ComputeDensityPressure(void)
+void ComputeDensityPressure(void)
+{
+	for (auto& pi : particles)
 	{
-		for (auto& pi : particles)
+		pi.rho = 0.f;
+		for (auto& pj : particles)
 		{
-			pi.rho = 0.f;
-			for (auto& pj : particles)
-			{
-				vec2 rij = pj.pos - pi.pos;
-				float r2 = dot(rij, rij);
+			vec2 rij = pj.pos - pi.pos;
+			float r2 = dot(rij, rij);
 
-				if (r2 < HSQ)
-				{
-					// this computation is symmetric
-					pi.rho += MASS * POLY6 * pow(HSQ - r2, 3.f);
-				}
+			if (r2 < HSQ)
+			{
+				// this computation is symmetric
+				pi.rho += MASS * POLY6 * pow(HSQ - r2, 3.f);
 			}
-			pi.p = GAS_CONST * (pi.rho - REST_DENS);
 		}
+		pi.p = GAS_CONST * (pi.rho - REST_DENS);
 	}
+}
 	
-	void ComputeForces(void)
+void ComputeForces(void)
+{
+	for (auto& pi : particles)
 	{
-		for (auto& pi : particles)
+		vec2 fpress(0.f, 0.f);
+		vec2 fvisc(0.f, 0.f);
+		for (auto& pj : particles)
 		{
-			vec2 fpress(0.f, 0.f);
-			vec2 fvisc(0.f, 0.f);
-			for (auto& pj : particles)
+			if (&pi == &pj)
 			{
-				if (&pi == &pj)
-				{
-					continue;
-				}
-
-				vec2 rij = pj.pos - pi.pos;
-				float r = length(rij);
-
-				if (r < H)
-				{
-					// compute pressure force contribution
-					fpress += -normalize(rij) * MASS * (pi.p + pj.p) / (2.f * pj.rho) * SPIKY_GRAD * pow(H - r, 3.f);
-					// compute viscosity force contribution
-					fvisc += VISC * MASS * (pj.velocity - pi.velocity) / pj.rho * VISC_LAP * (H - r);
-				}
+				continue;
 			}
-			vec2 fgrav = G * MASS / pi.rho;
-			pi.force = fpress + fvisc + fgrav;
-		}
-	}
 
-	void Integrate(void)
-	{
-		for (auto& p : particles)
-		{
-			// forward Euler integration
-			p.velocity += DT * p.force / p.rho;
-			p.pos += DT * p.velocity;
+			vec2 rij = pj.pos - pi.pos;
+			float r = length(rij);
 
-			// enforce boundary conditions
-			if (p.pos.x - EPS < 0.f)
+			if (r < H)
 			{
-				p.velocity.x *= BOUND_DAMPING;
-				p.pos.x = EPS;
-			}
-			if (p.pos.x + EPS > sx)
-			{
-				p.velocity.x *= BOUND_DAMPING;
-				p.pos.x = sx - EPS;
-			}
-			if (p.pos.y - EPS < 0.f)
-			{
-				p.velocity.y *= BOUND_DAMPING;
-				p.pos.y = EPS;
-			}
-			if (p.pos.y + EPS > sy)
-			{
-				p.velocity.y *= BOUND_DAMPING;
-				p.pos.y = sy - EPS;
+				// compute pressure force contribution
+				fpress += -normalize(rij) * MASS * (pi.p + pj.p) / (2.f * pj.rho) * SPIKY_GRAD * pow(H - r, 3.f);
+				// compute viscosity force contribution
+				fvisc += VISC * MASS * (pj.velocity - pi.velocity) / pj.rho * VISC_LAP * (H - r);
 			}
 		}
+		vec2 fgrav = G * MASS / pi.rho;
+		pi.force = fpress + fvisc + fgrav;
 	}
-};
-Material red, green;
-vector<Material*> materials{ &red, &green };
+}
+
+void Integrate(void)
+{
+	for (auto& p : particles)
+	{
+		// forward Euler integration
+		p.velocity += DT * p.force / p.rho;
+		p.pos += DT * p.velocity;
+
+		// enforce boundary conditions
+		if (p.pos.x - EPS < 0.f)
+		{
+			p.velocity.x *= BOUND_DAMPING;
+			p.pos.x = EPS;
+		}
+		if (p.pos.x + EPS > sx)
+		{
+			p.velocity.x *= BOUND_DAMPING;
+			p.pos.x = sx - EPS;
+		}
+		if (p.pos.y - EPS < 0.f)
+		{
+			p.velocity.y *= BOUND_DAMPING;
+			p.pos.y = EPS;
+		}
+		if (p.pos.y + EPS > sy)
+		{
+			p.velocity.y *= BOUND_DAMPING;
+			p.pos.y = sy - EPS;
+		}
+	}
+}
 
 bool pause = false;
 
 struct SApp : ci::app::App {
 	//shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
+	
 
 	void cleanup() {
 		//videoWriter.reset();
@@ -152,6 +147,8 @@ struct SApp : ci::app::App {
 
 	void setup()
 	{
+		GetOpt::init();
+
 		enableDenormalFlushToZero();
 
 		disableGLReadClamp();
@@ -185,10 +182,6 @@ struct SApp : ci::app::App {
 			pause = !pause;
 		}
 	}
-	void reset() {
-		red.reset();
-		green.reset();
-	}
 	vec2 direction;
 	vec2 lastm;
 	void mouseDrag(ci::app::MouseEvent e)
@@ -206,45 +199,33 @@ struct SApp : ci::app::App {
 	}
 	void stefanDraw()
 	{
-		auto bloomSize = cfg1::getOpt("bloomSize", 1.0f,
+		auto blurSize = cfg1::getOpt("blurSize", 1.0f,
 			[&]() { return keys['b']; },
 			[&]() { return mix(0.1, 8.0, mouseY); });
-		int bloomIters = cfg1::getOpt("bloomIters", 4.0f,
-			[&]() { return keys['B']; },
-			[&]() { return mix(1.0, 8.0, mouseY); });
-		float bloomIntensity = cfg1::getOpt("bloomIntensity", 0.2f,
+		int blurIters = cfg1::getOpt("blurIters", 4.0f,
 			[&]() { return keys['i']; },
+			[&]() { return mix(1.0, 8.0, mouseY); });
+		float blurMul = cfg1::getOpt("blurMul", 0.2f,
+			[&]() { return keys['m']; },
 			[&]() { return mix(0.1, 8.0, mouseY); });
+		const float bloomSize = 1.0f;
+		const int bloomIters = 4.0f;
+		const float bloomIntensity = 0.2f;
 
 		gl::clear(Color(0, 0, 0));
 
 		gl::setMatricesWindow(getWindowSize(), false);
 		auto img = Array2D<float>(sz);
-		for (auto* mat : materials) {
-			for (auto& particle : mat->particles) {
-				aaPoint<float, WrapModes::GetClamped>(img, particle.pos, 10);
-			}
+		for (auto& particle : particles) {
+			aaPoint<float, WrapModes::GetClamped>(img, particle.pos, 10 * blurMul);
 		}
-		int ksize = 10 * 2 + 1;
 		
-		/*(auto kernel = getGaussianKernel(ksize, sigmaFromKsize(ksize)/2);
-		img = separableConvolve<float, WrapModes::GetClamped>(
-			img, kernel);
-
-		//img = gaussianBlur<float, WrapModes::GetClamped>(img, 10 * 2 + 1);
-		forxy(img) {
-			img(p) += sqrt(img(p));
-			//img(p) = smoothstep(0.0f, 0.1f, img(p));
-		}*/
 		auto tex = gtex(img);
-		tex = gpuBlur2_5::run_longtail(tex, 7, exp(::mouseY*10));
+		tex = gpuBlur2_5::run_longtail(tex, bloomIters, bloomSize);
 		auto redTex = gtex(img);
-		//auto redTex = gtex(::red.img);
-		//auto greenTex = gtex(::green.img);
-
+		
 		auto redTexB = gpuBlur2_5::run_longtail(redTex, bloomIters, bloomSize);
-		//auto greenTexB = gpuBlur2_5::run_longtail(greenTex, bloomIters, bloomSize);
-
+		
 		redTex = shade2( redTex, redTexB, MULTILINE(
 			_out.r = (fetch1() + fetch1(tex2)) * bloomIntensity;
 		),
@@ -283,7 +264,7 @@ struct SApp : ci::app::App {
 			//"c += greenColor;"
 
 			"_out.rgb = c;"
-			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", surfTensionThres),
+			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", 0.1f),
 			"float PI = 3.14159265358979323846264;\n"
 			"vec2 latlong(vec3 v) {\n"
 			"v = v.xzy;\n"
@@ -313,7 +294,7 @@ struct SApp : ci::app::App {
 		tex2 = shade2(tex2,
 			"float f = fetch1()*100*mouse.x;"
 			"float fw = fwidth(f);"
-			//"f = smoothstep(0.5-fw/2, 0.5+fw/2, f);"
+			"f = smoothstep(0.5-fw/2, 0.5+fw/2, f);"
 			//"f = dFdx(f)+dFdy(f);"
 			"_out.rgb = vec3(f);"
 			, ShadeOpts().ifmt(GL_RGB16F));
@@ -329,15 +310,13 @@ struct SApp : ci::app::App {
 			doFluidStep();
 
 		} // if ! pause
-		auto material = keys['g'] ? &green : &red;
-
 		if (mouseDown_[0])
 		{
 			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 			float t = getElapsedFrames();
 
 			Particle part; part.pos = scaledm + vec2(sin(t), cos(t)) * 30.0f;
-			material->particles.push_back(part);
+			particles.push_back(part);
 		}
 		else if (mouseDown_[2]) {
 			mm();
@@ -352,7 +331,7 @@ struct SApp : ci::app::App {
 					vec2 v = vec2(x, y) - scaledm;
 					float w = std::max(0.0f, 1.0f - length(v) / r);
 					w = 3 * w * w - 2 * w * w * w;
-					for (Particle& part : material->particles) {
+					for (Particle& part : particles) {
 						if (distance(part.pos, v) < 10)
 							part.velocity += 4.0f * direction / (float)::scale;
 					}
@@ -362,9 +341,9 @@ struct SApp : ci::app::App {
 	}
 
 	void doFluidStep() {
-		red.ComputeDensityPressure();
-		red.ComputeForces();
-		red.Integrate();
+		ComputeDensityPressure();
+		ComputeForces();
+		Integrate();
 	}
 };
 
