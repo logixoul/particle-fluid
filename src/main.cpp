@@ -8,7 +8,7 @@
 #include "Array2D_imageProc.h"
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
-#include "getOpt.h"
+#include "cfg2.h"
 //#include "MyVideoWriter.h"
 
 #include "util.h"
@@ -147,7 +147,7 @@ struct SApp : ci::app::App {
 
 	void setup()
 	{
-		GetOpt::init();
+		cfg2::init();
 
 		enableDenormalFlushToZero();
 
@@ -170,6 +170,11 @@ struct SApp : ci::app::App {
 	}
 	void keyDown(ci::app::KeyEvent e)
 	{
+		if (e.getChar() == 'd')
+		{
+			cfg2::params->isVisible() ? cfg2::params->hide() : cfg2::params->show();
+		}
+
 		if (keys[' ']) {
 			doFluidStep();
 		}
@@ -199,15 +204,9 @@ struct SApp : ci::app::App {
 	}
 	void stefanDraw()
 	{
-		auto blurSize = cfg1::getOpt("blurSize", 1.0f,
-			[&]() { return keys['b']; },
-			[&]() { return mix(0.1, 8.0, mouseY); });
-		int blurIters = cfg1::getOpt("blurIters", 4.0f,
-			[&]() { return keys['i']; },
-			[&]() { return mix(1.0, 8.0, mouseY); });
-		float blurMul = cfg1::getOpt("blurMul", 0.2f,
-			[&]() { return keys['m']; },
-			[&]() { return mix(0.1, 8.0, mouseY); });
+		float blurSize = cfg2::getOpt("blurSize", "", 1.0f);
+		int blurIters = cfg2::getOpt("blurIters", "", 4.0f);
+		float blurMul = cfg2::getOpt("blurMul", "", 0.2f);
 		const float bloomSize = 1.0f;
 		const int bloomIters = 4.0f;
 		const float bloomIntensity = 0.2f;
@@ -221,7 +220,7 @@ struct SApp : ci::app::App {
 		}
 		
 		auto tex = gtex(img);
-		tex = gpuBlur2_5::run_longtail(tex, bloomIters, bloomSize);
+		tex = gpuBlur2_5::run_longtail(tex, blurIters, blurSize);
 		auto redTex = gtex(img);
 		
 		auto redTexB = gpuBlur2_5::run_longtail(redTex, bloomIters, bloomSize);
@@ -292,7 +291,7 @@ struct SApp : ci::app::App {
 
 		tex2 = tex;
 		tex2 = shade2(tex2,
-			"float f = fetch1()*100*mouse.x;"
+			"float f = fetch1();"
 			"float fw = fwidth(f);"
 			"f = smoothstep(0.5-fw/2, 0.5+fw/2, f);"
 			//"f = dFdx(f)+dFdy(f);"
@@ -302,6 +301,8 @@ struct SApp : ci::app::App {
 		//videoWriter->write(tex2);
 		
 		gl::draw(tex2, getWindowBounds());
+
+		cfg2::render();
 	}
 	void stefanUpdate()
 	{

@@ -239,7 +239,7 @@
     <ClCompile Include="easyfft.cpp">
     </ClCompile>
     <ClCompile Include="events.cpp" />
-    <ClCompile Include="getOpt.cpp" />
+    <ClCompile Include="cfg2.cpp" />
     <ClCompile Include="gpgpu.cpp" />
     <ClCompile Include="colorspaces.cpp" />
     <ClCompile Include="cfg1.cpp" />
@@ -268,7 +268,7 @@
   <ItemGroup>
     <ClInclude Include="easyfft.h">
     </ClInclude>
-    <ClInclude Include="getOpt.h" />
+    <ClInclude Include="cfg2.h" />
     <ClInclude Include="gpgpu.h" />
     <ClInclude Include="gpuBlur2_5.h">
     </ClInclude>

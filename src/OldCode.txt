@@ -182,17 +182,17 @@ void doFluidStep() {
 		red.Integrate();
 		return;
 		/*
-		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
+		surfTensionThres = cfg1::cfg2("surfTensionThres", .04f,
 			[&]() { return keys['6']; },
 			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
 
-		auto surfTension = cfg1::getOpt("surfTension", 1.0f,
+		auto surfTension = cfg1::cfg2("surfTension", 1.0f,
 			[&]() { return keys['7']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
-		auto gravity = cfg1::getOpt("gravity", .1f,//0.0f,//.1f,
+		auto gravity = cfg1::cfg2("gravity", .1f,//0.0f,//.1f,
 			[&]() { return keys['8']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
-		auto incompressibilityCoef = cfg1::getOpt("incompressibilityCoef", 10.0f,
+		auto incompressibilityCoef = cfg1::cfg2("incompressibilityCoef", 10.0f,
 			[&]() { return keys['/']; },
 			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
 

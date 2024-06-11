@@ -58,7 +58,7 @@
     <ClCompile Include="util.cpp">
       <Filter>lxlib</Filter>
     </ClCompile>
-    <ClCompile Include="getOpt.cpp" />
+    <ClCompile Include="cfg2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="precompiled.h" />
@@ -92,7 +92,7 @@
     <ClInclude Include="util.h">
       <Filter>lxlib</Filter>
     </ClInclude>
-    <ClInclude Include="getOpt.h" />
+    <ClInclude Include="cfg2.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="hcl_lib.fs">
