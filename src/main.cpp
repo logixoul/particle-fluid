@@ -13,8 +13,8 @@
 #include "util.h"
 
 typedef Array2D<float> Image;
-int wsx = 400, wsy = 400;
-int scale = 4;
+int wsx = 800, wsy = 800;
+int scale = 2;
 int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 ivec2 sz(sx, sy);
@@ -24,7 +24,30 @@ float surfTensionThres;
 struct Particle {
 	vec2 pos;
 	vec2 velocity;
+	vec2 force;
+	float rho, p; // density and pressure
 };
+
+
+
+const static vec2 G(0.f, 10.f);   // external (gravitational) forces
+const static float REST_DENS = 300.f;  // rest density
+const static float GAS_CONST = 2000.f; // const for equation of state
+const static float H = 16.f;           // kernel radius
+const static float HSQ = H * H;        // radius^2 for optimization
+const static float MASS = 2.5f;        // assume all particles have the same mass
+const static float VISC = 200.f;       // viscosity constant
+const static float DT = 0.0007f;       // integration timestep
+
+// smoothing kernels defined in Müller and their gradients
+// adapted to 2D per "SPH Based Shallow Water Simulation" by Solenthaler et al.
+const static float POLY6 = 4.f / (M_PI * pow(H, 8.f));
+const static float SPIKY_GRAD = -10.f / (M_PI * pow(H, 5.f));
+const static float VISC_LAP = 40.f / (M_PI * pow(H, 5.f));
+
+// simulation parameters
+const static float EPS = H; // boundary epsilon
+const static float BOUND_DAMPING = -0.5f;
 
 struct Material {
 	//Array2D<float> img = Array2D<float>(sx, sy);
@@ -32,6 +55,87 @@ struct Material {
 
 	void reset() {
 		particles.clear();
+	}
+
+	void ComputeDensityPressure(void)
+	{
+		for (auto& pi : particles)
+		{
+			pi.rho = 0.f;
+			for (auto& pj : particles)
+			{
+				vec2 rij = pj.pos - pi.pos;
+				float r2 = dot(rij, rij);
+
+				if (r2 < HSQ)
+				{
+					// this computation is symmetric
+					pi.rho += MASS * POLY6 * pow(HSQ - r2, 3.f);
+				}
+			}
+			pi.p = GAS_CONST * (pi.rho - REST_DENS);
+		}
+	}
+	
+	void ComputeForces(void)
+	{
+		for (auto& pi : particles)
+		{
+			vec2 fpress(0.f, 0.f);
+			vec2 fvisc(0.f, 0.f);
+			for (auto& pj : particles)
+			{
+				if (&pi == &pj)
+				{
+					continue;
+				}
+
+				vec2 rij = pj.pos - pi.pos;
+				float r = length(rij);
+
+				if (r < H)
+				{
+					// compute pressure force contribution
+					fpress += -normalize(rij) * MASS * (pi.p + pj.p) / (2.f * pj.rho) * SPIKY_GRAD * pow(H - r, 3.f);
+					// compute viscosity force contribution
+					fvisc += VISC * MASS * (pj.velocity - pi.velocity) / pj.rho * VISC_LAP * (H - r);
+				}
+			}
+			vec2 fgrav = G * MASS / pi.rho;
+			pi.force = fpress + fvisc + fgrav;
+		}
+	}
+
+	void Integrate(void)
+	{
+		for (auto& p : particles)
+		{
+			// forward Euler integration
+			p.velocity += DT * p.force / p.rho;
+			p.pos += DT * p.velocity;
+
+			// enforce boundary conditions
+			if (p.pos.x - EPS < 0.f)
+			{
+				p.velocity.x *= BOUND_DAMPING;
+				p.pos.x = EPS;
+			}
+			if (p.pos.x + EPS > sx)
+			{
+				p.velocity.x *= BOUND_DAMPING;
+				p.pos.x = sx - EPS;
+			}
+			if (p.pos.y - EPS < 0.f)
+			{
+				p.velocity.y *= BOUND_DAMPING;
+				p.pos.y = EPS;
+			}
+			if (p.pos.y + EPS > sy)
+			{
+				p.velocity.y *= BOUND_DAMPING;
+				p.pos.y = sy - EPS;
+			}
+		}
 	}
 };
 Material red, green;
@@ -102,6 +206,16 @@ struct SApp : ci::app::App {
 	}
 	void stefanDraw()
 	{
+		auto bloomSize = cfg1::getOpt("bloomSize", 1.0f,
+			[&]() { return keys['b']; },
+			[&]() { return mix(0.1, 8.0, mouseY); });
+		int bloomIters = cfg1::getOpt("bloomIters", 4.0f,
+			[&]() { return keys['B']; },
+			[&]() { return mix(1.0, 8.0, mouseY); });
+		float bloomIntensity = cfg1::getOpt("bloomIntensity", 0.2f,
+			[&]() { return keys['i']; },
+			[&]() { return mix(0.1, 8.0, mouseY); });
+
 		gl::clear(Color(0, 0, 0));
 
 		gl::setMatricesWindow(getWindowSize(), false);
@@ -112,7 +226,8 @@ struct SApp : ci::app::App {
 			}
 		}
 		int ksize = 10 * 2 + 1;
-		auto kernel = getGaussianKernel(ksize, sigmaFromKsize(ksize)/2);
+		
+		/*(auto kernel = getGaussianKernel(ksize, sigmaFromKsize(ksize)/2);
 		img = separableConvolve<float, WrapModes::GetClamped>(
 			img, kernel);
 
@@ -120,21 +235,13 @@ struct SApp : ci::app::App {
 		forxy(img) {
 			img(p) += sqrt(img(p));
 			//img(p) = smoothstep(0.0f, 0.1f, img(p));
-		}
+		}*/
 		auto tex = gtex(img);
+		tex = gpuBlur2_5::run_longtail(tex, 7, exp(::mouseY*10));
 		auto redTex = gtex(img);
 		//auto redTex = gtex(::red.img);
 		//auto greenTex = gtex(::green.img);
 
-		auto bloomSize = cfg1::getOpt("bloomSize", 1.0f,
-			[&]() { return keys['b']; },
-			[&]() { return mix(0.1, 8.0, mouseY); });
-		int bloomIters = cfg1::getOpt("bloomIters", 4.0f,
-			[&]() { return keys['B']; },
-			[&]() { return mix(1.0, 8.0, mouseY); });
-		float bloomIntensity = cfg1::getOpt("bloomIntensity", 0.2f,
-			[&]() { return keys['i']; },
-			[&]() { return mix(0.1, 8.0, mouseY); });
 		auto redTexB = gpuBlur2_5::run_longtail(redTex, bloomIters, bloomSize);
 		//auto greenTexB = gpuBlur2_5::run_longtail(greenTex, bloomIters, bloomSize);
 
@@ -160,6 +267,7 @@ struct SApp : ci::app::App {
 			"float eta=1.0/1.3;"
 			"vec3 R=refract(I, N, eta);"
 			"vec3 c = getEnv(R);"
+			//"vec3 c = N;"
 			"vec3 albedo = 0.0*vec3(0.005, 0.0, 0.0);"
 			"c = mix(albedo, c, pow(.9, fetch1(tex) * 50.0));" // tmp
 			"R = reflect(I, N);"
@@ -180,11 +288,11 @@ struct SApp : ci::app::App {
 			"vec2 latlong(vec3 v) {\n"
 			"v = v.xzy;\n"
 			"v = normalize(v);\n"
-			"float theta = acos(-v.z);\n" // +z is up
+			"float theta = asin(v.z);\n" // +z is up
 			"\n"
 			"v.y=-v.y;\n"
-			"float phi = atan(v.y, v.x) + PI;\n"
-			"return vec2(phi / (2.0*PI), theta / (PI/2.0));\n"
+			"float phi = atan(v.y, v.x) + PI/2;\n"
+			"return vec2(phi / (PI), theta / (PI/2.0));\n"
 			"}\n"
 			"vec3 w = vec3(.22, .71, .07);"
 			"vec3 getEnv(vec3 v) {\n"
@@ -200,6 +308,15 @@ struct SApp : ci::app::App {
 			"c = pow(c, vec3(1.0/2.2));"
 			"_out.rgb = c;"
 		);
+
+		tex2 = tex;
+		tex2 = shade2(tex2,
+			"float f = fetch1()*100*mouse.x;"
+			"float fw = fwidth(f);"
+			//"f = smoothstep(0.5-fw/2, 0.5+fw/2, f);"
+			//"f = dFdx(f)+dFdy(f);"
+			"_out.rgb = vec3(f);"
+			, ShadeOpts().ifmt(GL_RGB16F));
 
 		//videoWriter->write(tex2);
 		
@@ -217,7 +334,9 @@ struct SApp : ci::app::App {
 		if (mouseDown_[0])
 		{
 			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
-			Particle part; part.pos = scaledm;
+			float t = getElapsedFrames();
+
+			Particle part; part.pos = scaledm + vec2(sin(t), cos(t)) * 30.0f;
 			material->particles.push_back(part);
 		}
 		else if (mouseDown_[2]) {
@@ -243,81 +362,9 @@ struct SApp : ci::app::App {
 	}
 
 	void doFluidStep() {
-		surfTensionThres = cfg1::getOpt("surfTensionThres", .04f,
-			[&]() { return keys['6']; },
-			[&]() { return expRange(mouseY, 0.1f, 50000.0f); });
-
-		auto surfTension = cfg1::getOpt("surfTension", 1.0f,
-			[&]() { return keys['7']; },
-			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
-		auto gravity = cfg1::getOpt("gravity", .1f,//0.0f,//.1f,
-			[&]() { return keys['8']; },
-			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
-		auto incompressibilityCoef = cfg1::getOpt("incompressibilityCoef", 10.0f,
-			[&]() { return keys['/']; },
-			[&]() { return expRange(mouseY, .0001f, 40000.0f); });
-
-
-		//for (int i = 0; i < 4; i++) {
-			//repel(::red, ::green);
-			//repel(::green, ::red);
-		//}
-
-		auto imgForAdvect = Array2D<float>(sz);
-		for (auto* mat : materials) {
-			for (auto& particle : mat->particles) {
-				aaPoint<float, WrapModes::GetClamped>(imgForAdvect, particle.pos, 1);
-			}
-		}
-		for (int i = 0; i < 10; i++) {
-			imgForAdvect = ::gaussianBlur<float, WrapModes::GetClamped>(imgForAdvect, 3 * 2 + 1);
-		}
-		//auto grads = get_gradients(imgForAdvect);
-
-		for (auto material : ::materials) {
-			auto& particles = material->particles;
-			auto img_b = imgForAdvect;
-			//for(int i < 0
-			//img_b = gaussianBlur<float, WrapModes::GetClamped>(imgForAdvect, 3 * 2 + 1);
-			auto& guidance = img_b;
-			for (auto& particle : material->particles) {
-				particle.velocity += vec2(0.0f, gravity);
-
-				auto g = gradient_i<float, WrapModes::Get_WrapZeros>(guidance, particle.pos);
-				if (img_b(particle.pos) < surfTensionThres)
-				{
-					g = g * surfTension * imgForAdvect(particle.pos);
-				}
-				else
-				{
-					g *= -incompressibilityCoef;
-				}
-
-				particle.velocity += g;
-			}
-
-			advect(*material);
-		}
-
-
-	}
-	void advect(Material& material) {
-		for (auto& particle : material.particles) {
-			vec2 newPos = particle.pos + particle.velocity;
-			for (int dim = 0; dim <= 1; dim++) {
-				const float damping = 0.9f;
-				float maxVal = sz[dim] - 1;
-				if (newPos[dim] > maxVal) {
-					particle.velocity[dim] *= -1.0f * damping;
-					newPos[dim] = maxVal - (newPos[dim] - maxVal);
-				}
-				if (newPos[dim] < 0) {
-					particle.velocity[dim] *= -1.0f * damping;
-					newPos[dim] = -newPos[dim];
-				}
-			}
-			particle.pos = newPos;
-		}
+		red.ComputeDensityPressure();
+		red.ComputeForces();
+		red.Integrate();
 	}
 };
 
