@@ -40,6 +40,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <glm/gtx/io.hpp>
+#define IMGUI_USER_CONFIG "CinderImGuiConfig.h"
+#define CINDER_IMGUI_EXTERNAL
 
 using namespace glm;
 using namespace std;

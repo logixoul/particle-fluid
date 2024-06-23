@@ -20,7 +20,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  POSSIBILITY OF SUCH DAMAGE.
 */
-
+#include "precompiled.h"
 #pragma once
 
 #if ! defined( IMGUI_USER_CONFIG )
@@ -51,7 +51,7 @@ namespace cinder {
 
 //! Additional convenience initializaiont and overloads for cinder types
 namespace ImGui {
-	struct CI_API Options {
+	struct  Options {
 		//! Defaults to using the current window, the basic ImGui font and the dark theme
 		Options();
 
@@ -103,50 +103,50 @@ namespace ImGui {
 	//! By default, automatic rendering into ci::app::getWindow() will be used.
 	//! In a multi-window context, only call ImGui in App::draw() if the active window matches the one
 	//! used here for initialization, or in App::update() only if the this window is still open.
-	CI_API bool Initialize(const Options& options = Options());
+	 bool Initialize(const Options& options = Options());
 
-	CI_API bool DragFloat2(const char* label, glm::vec2* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
-	CI_API bool DragFloat3(const char* label, glm::vec3* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
-	CI_API bool DragFloat4(const char* label, glm::vec4* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
+	 bool DragFloat2(const char* label, glm::vec2* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
+	 bool DragFloat3(const char* label, glm::vec3* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
+	 bool DragFloat4(const char* label, glm::vec4* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
 
-	CI_API bool DragInt2(const char* label, glm::ivec2* v2, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%.3f");
-	CI_API bool DragInt3(const char* label, glm::ivec3* v2, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%.3f");
-	CI_API bool DragInt4(const char* label, glm::ivec4* v2, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%.3f");
+	 bool DragInt2(const char* label, glm::ivec2* v2, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%.3f");
+	 bool DragInt3(const char* label, glm::ivec3* v2, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%.3f");
+	 bool DragInt4(const char* label, glm::ivec4* v2, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%.3f");
 
-	CI_API bool SliderFloat2(const char* label, glm::vec2* v2, float v_min, float v_max, const char* format = "%.3f", float power = 1.0f);
-	CI_API bool SliderFloat3(const char* label, glm::vec3* v2, float v_min, float v_max, const char* format = "%.3f", float power = 1.0f);
-	CI_API bool SliderFloat4(const char* label, glm::vec4* v2, float v_min, float v_max, const char* format = "%.3f", float power = 1.0f);
+	 bool SliderFloat2(const char* label, glm::vec2* v2, float v_min, float v_max, const char* format = "%.3f", float power = 1.0f);
+	 bool SliderFloat3(const char* label, glm::vec3* v2, float v_min, float v_max, const char* format = "%.3f", float power = 1.0f);
+	 bool SliderFloat4(const char* label, glm::vec4* v2, float v_min, float v_max, const char* format = "%.3f", float power = 1.0f);
 
-	CI_API bool SliderInt2(const char* label, glm::ivec2* v2, int v_min, int v_max, const char* format = "%.3f");
-	CI_API bool SliderInt3(const char* label, glm::ivec3* v2, int v_min, int v_max, const char* format = "%.3f");
-	CI_API bool SliderInt4(const char* label, glm::ivec4* v2, int v_min, int v_max, const char* format = "%.3f");
+	 bool SliderInt2(const char* label, glm::ivec2* v2, int v_min, int v_max, const char* format = "%.3f");
+	 bool SliderInt3(const char* label, glm::ivec3* v2, int v_min, int v_max, const char* format = "%.3f");
+	 bool SliderInt4(const char* label, glm::ivec4* v2, int v_min, int v_max, const char* format = "%.3f");
 
-	CI_API bool InputInt2(const char* label, glm::ivec2* v2, ImGuiInputTextFlags flags = 0);
-	CI_API bool InputInt3(const char* label, glm::ivec3* v2, ImGuiInputTextFlags flags = 0);
-	CI_API bool InputInt4(const char* label, glm::ivec4* v2, ImGuiInputTextFlags flags = 0);
+	 bool InputInt2(const char* label, glm::ivec2* v2, ImGuiInputTextFlags flags = 0);
+	 bool InputInt3(const char* label, glm::ivec3* v2, ImGuiInputTextFlags flags = 0);
+	 bool InputInt4(const char* label, glm::ivec4* v2, ImGuiInputTextFlags flags = 0);
 
-	CI_API bool ColorEdit3(const char* label, ci::Colorf* color, ImGuiColorEditFlags flags = 0);
-	CI_API bool ColorEdit4(const char* label, ci::ColorAf* color, ImGuiColorEditFlags flags = 0);
+	 bool ColorEdit3(const char* label, ci::Colorf* color, ImGuiColorEditFlags flags = 0);
+	 bool ColorEdit4(const char* label, ci::ColorAf* color, ImGuiColorEditFlags flags = 0);
 
-	CI_API bool ColorPicker3(const char* label, ci::Colorf* color, ImGuiColorEditFlags flags = 0);
-	CI_API bool ColorPicker4(const char* label, ci::ColorAf* color, ImGuiColorEditFlags flags = 0);
+	 bool ColorPicker3(const char* label, ci::Colorf* color, ImGuiColorEditFlags flags = 0);
+	 bool ColorPicker4(const char* label, ci::ColorAf* color, ImGuiColorEditFlags flags = 0);
 
-	CI_API bool Combo(const char* label, int* currIndex, const std::vector<std::string>& values, ImGuiComboFlags flags = 0);
-	CI_API bool ListBox(const char* label, int* currIndex, const std::vector<std::string>& values, int height_in_items = -1);
+	 bool Combo(const char* label, int* currIndex, const std::vector<std::string>& values, ImGuiComboFlags flags = 0);
+	 bool ListBox(const char* label, int* currIndex, const std::vector<std::string>& values, int height_in_items = -1);
 
-	CI_API void	Image(const ci::gl::Texture2dRef& texture, const ci::vec2& size, const ci::vec2& uv0 = ci::vec2(0, 0), const ci::vec2& uv1 = ci::vec2(1, 1), const ci::vec4& tint_col = ci::vec4(1, 1, 1, 1), const ci::vec4& border_col = ci::vec4(0, 0, 0, 0));
+	 void	Image(const ci::gl::Texture2dRef& texture, const ci::vec2& size, const ci::vec2& uv0 = ci::vec2(0, 0), const ci::vec2& uv1 = ci::vec2(1, 1), const ci::vec4& tint_col = ci::vec4(1, 1, 1, 1), const ci::vec4& border_col = ci::vec4(0, 0, 0, 0));
 
-	struct CI_API ScopedWindow : public ci::Noncopyable {
+	struct  ScopedWindow : public ci::Noncopyable {
 		ScopedWindow(const char* label);
 		~ScopedWindow();
 	};
 
-	struct CI_API ScopedGroup : public ci::Noncopyable {
+	struct  ScopedGroup : public ci::Noncopyable {
 		ScopedGroup();
 		~ScopedGroup();
 	};
 
-	struct CI_API ScopedTreeNode : public ci::Noncopyable {
+	struct  ScopedTreeNode : public ci::Noncopyable {
 		ScopedTreeNode(const std::string& name);
 		~ScopedTreeNode();
 		//! Returns true when tree node is not collapsed
@@ -155,28 +155,28 @@ namespace ImGui {
 		bool mOpened;
 	};
 
-	struct CI_API ScopedId : public ci::Noncopyable {
+	struct  ScopedId : public ci::Noncopyable {
 		ScopedId(int int_id);
 		ScopedId(const char* label);
 		ScopedId(const void* ptrId);
 		~ScopedId();
 	};
 
-	struct CI_API ScopedMenuBar : public ci::Noncopyable {
+	struct  ScopedMenuBar : public ci::Noncopyable {
 		ScopedMenuBar();
 		~ScopedMenuBar();
 	protected:
 		bool mOpened;
 	};
 
-	struct CI_API ScopedMainMenuBar : public ci::Noncopyable {
+	struct  ScopedMainMenuBar : public ci::Noncopyable {
 		ScopedMainMenuBar();
 		~ScopedMainMenuBar();
 	protected:
 		bool mOpened;
 	};
 
-	struct CI_API ScopedColumns : public ci::Noncopyable {
+	struct  ScopedColumns : public ci::Noncopyable {
 		ScopedColumns(int count, const char* id = NULL, bool border = true);
 		~ScopedColumns();
 	};

@@ -231,6 +231,12 @@
   <ItemGroup>
     <ClCompile Include="Array2D_imageProc.cpp" />
     <ClInclude Include="CinderImGui.h" />
+    <ClCompile Include="CinderImGui.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ConcurrentQueue.cpp" />
     <ClCompile Include="CrossThreadCallQueue.cpp" />
     <ClCompile Include="cvstuff.cpp">
@@ -269,6 +275,7 @@
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CinderImGuiConfig.h" />
     <ClInclude Include="easyfft.h">
     </ClInclude>
     <ClInclude Include="cfg2.h" />

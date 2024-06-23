@@ -10,6 +10,4 @@ in dev command prompt:
 
 vcpkg new --application
 vcpkg add port imgui
-
-
-there's a "feature" in that package, called "opengl3-binding"
+vcpkg add port imgui[opengl3-binding]

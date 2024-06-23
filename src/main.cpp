@@ -9,8 +9,6 @@
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
 #include "cfg2.h"
-#include <imgui.h>
-#define CINDER_IMGUI_EXTERNAL
 #include "CinderImGui.h"
 //#include "MyVideoWriter.h"
 

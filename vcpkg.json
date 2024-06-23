@@ -1,5 +1,10 @@
 {
   "dependencies": [
-    "imgui"
+    {
+      "name": "imgui",
+      "features": [
+        "opengl3-binding"
+      ]
+    }
   ]
 }
