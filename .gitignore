@@ -289,3 +289,4 @@ __pycache__/
 *.mp4
 *.bak
 /vcpkg_installed/x64-windows
+/vcpkg_installed/x64-windows-v141

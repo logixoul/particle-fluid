@@ -326,7 +326,7 @@ namespace ImGui {
 
 	bool ListBox(const char* label, int* currIndex, const std::vector<std::string>& values, int height_in_items)
 	{
-		if (values.empty()) return false;
+		/*if (values.empty()) return false;
 
 		bool changed = false;
 		if (ImGui::ListBoxHeader(label, (int)values.size(), height_in_items)) {
@@ -342,7 +342,8 @@ namespace ImGui {
 			}
 			ImGui::ListBoxFooter();
 		}
-		return changed;
+		return changed;*/
+		throw 0;
 	}
 
 	void Image(const ci::gl::Texture2dRef& texture, const ci::vec2& size, const ci::vec2& uv0, const ci::vec2& uv1, const ci::vec4& tint_col, const ci::vec4& border_col)

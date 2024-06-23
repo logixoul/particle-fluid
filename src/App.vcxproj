@@ -81,6 +81,30 @@
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
