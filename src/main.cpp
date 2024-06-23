@@ -9,7 +9,6 @@
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
 #include "cfg2.h"
-#include "CinderImGui.h"
 //#include "MyVideoWriter.h"
 
 #include "util.h"
@@ -162,19 +161,23 @@ struct SApp : ci::app::App {
 		// focus
 		getWindow()->setAlwaysOnTop(true);
 		getWindow()->setAlwaysOnTop(false);
+
+
 	}
 	void update()
 	{
+		cfg2::begin();
 		stefanfw::beginFrame();
 		stefanUpdate();
 		stefanDraw();
 		stefanfw::endFrame();
+		cfg2::end();
 	}
 	void keyDown(ci::app::KeyEvent e)
 	{
 		if (e.getChar() == 'd')
 		{
-			cfg2::params->isVisible() ? cfg2::params->hide() : cfg2::params->show();
+			//cfg2::params->isVisible() ? cfg2::params->hide() : cfg2::params->show();
 		}
 
 		if (keys[' ']) {
@@ -303,8 +306,6 @@ struct SApp : ci::app::App {
 		//videoWriter->write(tex2);
 		
 		gl::draw(tex2, getWindowBounds());
-
-		cfg2::render();
 	}
 	void stefanUpdate()
 	{

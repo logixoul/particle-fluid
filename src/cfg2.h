@@ -6,8 +6,8 @@ struct cfg2
 	static void init();
 	template<class T>
 	static T getOpt(string const& name, string const& opts, T defaultValue);
-	static ci::params::InterfaceGlRef params;
-	static void render();
+	static void begin();
+	static void end();
 };
 
 #define GETFLOAT(name, opts, defaultValue) float name = cfg2::cfg2<float>(#name, opts, defaultValue);
