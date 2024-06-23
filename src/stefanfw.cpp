@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "stefanfw.h"
 #include "MyTimer.h"
 #include "sw.h"
-#include "cfg1.h"
 
 float mouseX, mouseY;
 bool keys[256];
@@ -49,7 +48,6 @@ namespace stefanfw {
 	void endFrame() {
 		sw::endFrame();
 		TimerManager::update();
-		cfg1::print();
 	}
 
 	// todo make this take ref

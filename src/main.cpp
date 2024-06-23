@@ -9,6 +9,7 @@
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
 #include "cfg2.h"
+#include "IntegratedConsole.h"
 //#include "MyVideoWriter.h"
 
 #include "util.h"
@@ -140,7 +141,7 @@ bool pause = false;
 
 struct SApp : ci::app::App {
 	//shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
-	
+	IntegratedConsole integratedConsole;
 
 	void cleanup() {
 		//videoWriter.reset();
@@ -157,12 +158,6 @@ struct SApp : ci::app::App {
 		setWindowSize(wsx, wsy);
 
 		reset();
-
-		// focus
-		getWindow()->setAlwaysOnTop(true);
-		getWindow()->setAlwaysOnTop(false);
-
-
 	}
 	void update()
 	{
@@ -172,6 +167,8 @@ struct SApp : ci::app::App {
 		stefanDraw();
 		stefanfw::endFrame();
 		cfg2::end();
+
+		integratedConsole.update();
 	}
 	void keyDown(ci::app::KeyEvent e)
 	{
@@ -215,6 +212,7 @@ struct SApp : ci::app::App {
 		const float bloomSize = 1.0f;
 		const int bloomIters = 4.0f;
 		const float bloomIntensity = 0.2f;
+		cout << blurMul << endl;
 
 		gl::clear(Color(0, 0, 0));
 
@@ -352,9 +350,4 @@ struct SApp : ci::app::App {
 };
 
 CrossThreadCallQueue * gMainThreadCallQueue;
-CINDER_APP(SApp, ci::app::RendererGl(),
-	[&](ci::app::App::Settings *settings)
-{
-	//bool developer = (bool)ifstream(getAssetPath("developer"));
-	settings->setConsoleWindowEnabled(true);
-})
+CINDER_APP(SApp, ci::app::RendererGl())
