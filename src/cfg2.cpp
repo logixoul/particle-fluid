@@ -5,7 +5,10 @@ ci::params::InterfaceGlRef cfg2::params;
 
 void cfg2::init()
 {
+	//ci::app::getWindow()->getContentScale();
 	params = ci::params::InterfaceGl::create( "App parameters", ci::ivec2(200, 400));
+	
+	//TwDefine(" GLOBAL fontsize=3 ");
 
 	//params->hide();
 }
@@ -20,7 +23,8 @@ void cfg2::render()
 		glUseProgram(0);
 			
 		gl::pushMatrices();
-		gl::scale(2.0f, 2.0f);
+		//gl::scale(2.0f, 2.0f);
+		//glScalef(2.0f, 2.0f, 2.0f);
 		params->draw();
 		gl::popMatrices();
 			

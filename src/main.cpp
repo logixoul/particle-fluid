@@ -9,6 +9,9 @@
 #include "cfg1.h"
 #include "CrossThreadCallQueue.h"
 #include "cfg2.h"
+#include <imgui.h>
+#define CINDER_IMGUI_EXTERNAL
+#include "CinderImGui.h"
 //#include "MyVideoWriter.h"
 
 #include "util.h"
@@ -20,6 +23,7 @@ int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 ivec2 sz(sx, sy);
 
+// https://lucasschuermann.com/writing/implementing-sph-in-2d
 struct Particle {
 	vec2 pos;
 	vec2 velocity;
