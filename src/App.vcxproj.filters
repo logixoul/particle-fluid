@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="precompiled.cpp" />
-    <ClCompile Include="Constants.cpp" />
     <ClCompile Include="Array2D_imageProc.cpp">
       <Filter>lxlib</Filter>
     </ClCompile>
@@ -93,6 +92,7 @@
       <Filter>lxlib</Filter>
     </ClInclude>
     <ClInclude Include="cfg2.h" />
+    <ClInclude Include="CinderImGui.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="hcl_lib.fs">
@@ -107,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="OldCode.txt" />
+    <Text Include="..\vcpkg-notes.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="lxlib">

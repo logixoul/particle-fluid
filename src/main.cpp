@@ -20,6 +20,7 @@ int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 ivec2 sz(sx, sy);
 
+// https://lucasschuermann.com/writing/implementing-sph-in-2d
 struct Particle {
 	vec2 pos;
 	vec2 velocity;
@@ -160,19 +161,23 @@ struct SApp : ci::app::App {
 		// focus
 		getWindow()->setAlwaysOnTop(true);
 		getWindow()->setAlwaysOnTop(false);
+
+
 	}
 	void update()
 	{
+		cfg2::begin();
 		stefanfw::beginFrame();
 		stefanUpdate();
 		stefanDraw();
 		stefanfw::endFrame();
+		cfg2::end();
 	}
 	void keyDown(ci::app::KeyEvent e)
 	{
 		if (e.getChar() == 'd')
 		{
-			cfg2::params->isVisible() ? cfg2::params->hide() : cfg2::params->show();
+			//cfg2::params->isVisible() ? cfg2::params->hide() : cfg2::params->show();
 		}
 
 		if (keys[' ']) {
@@ -301,8 +306,6 @@ struct SApp : ci::app::App {
 		//videoWriter->write(tex2);
 		
 		gl::draw(tex2, getWindowBounds());
-
-		cfg2::render();
 	}
 	void stefanUpdate()
 	{

@@ -78,6 +78,33 @@
     <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</EmbedManifest>
     <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</EmbedManifest>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgUseStatic>
+    </VcpkgUseStatic>
+    <VcpkgAdditionalInstallOptions>--overlay-triplets=../lx-triplets</VcpkgAdditionalInstallOptions>
+    <VcpkgTriplet>x64-windows-v141</VcpkgTriplet>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -227,8 +254,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Array2D_imageProc.cpp" />
+    <ClInclude Include="CinderImGui.h" />
+    <ClCompile Include="CinderImGui.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ConcurrentQueue.cpp" />
-    <ClCompile Include="Constants.cpp" />
     <ClCompile Include="CrossThreadCallQueue.cpp" />
     <ClCompile Include="cvstuff.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -266,6 +299,7 @@
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CinderImGuiConfig.h" />
     <ClInclude Include="easyfft.h">
     </ClInclude>
     <ClInclude Include="cfg2.h" />
@@ -287,6 +321,7 @@
     <None Include="stuff.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="..\vcpkg-notes.txt" />
     <Text Include="OldCode.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
