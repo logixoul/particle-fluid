@@ -141,7 +141,7 @@ bool pause = false;
 
 struct SApp : ci::app::App {
 	//shared_ptr<MyVideoWriter> videoWriter = make_shared<MyVideoWriter>();
-	IntegratedConsole integratedConsole;
+	shared_ptr<IntegratedConsole> integratedConsole;
 
 	void cleanup() {
 		//videoWriter.reset();
@@ -150,6 +150,7 @@ struct SApp : ci::app::App {
 	void setup()
 	{
 		cfg2::init();
+		integratedConsole = make_shared<IntegratedConsole>();;
 
 		enableDenormalFlushToZero();
 
@@ -168,7 +169,7 @@ struct SApp : ci::app::App {
 		stefanfw::endFrame();
 		cfg2::end();
 
-		integratedConsole.update();
+		integratedConsole->update();
 	}
 	void keyDown(ci::app::KeyEvent e)
 	{
