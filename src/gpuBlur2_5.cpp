@@ -39,9 +39,17 @@ namespace gpuBlur2_5 {
 		return state;
 	}
 
+	float logAB(float a, float b) {
+		return log(b) / log(a);
+	}
+
 	gl::TextureRef run_longtail(gl::TextureRef src, int lvls, float lvlmul, float hscale, float vscale) {
 		vector<float> weights;
 		float sumw = 0.0f;
+		int maxHLvls = floor(logAB(1.0f / hscale, (float)src->getWidth()));
+		int maxVLvls = floor(logAB(1.0f / vscale, (float)src->getHeight()));
+		int maxLvls = std::min(maxHLvls, maxVLvls);
+		lvls = std::min(lvls, maxLvls);
 		for (int i = 0; i < lvls; i++) {
 			float w = pow(lvlmul, float(i));
 			weights.push_back(w);

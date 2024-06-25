@@ -1,15 +1,13 @@
 #pragma once
 #include "precompiled.h"
+#include "CinderImGui.h"
 
 struct cfg2
 {
 	static void init();
-	template<class T>
-	static T getOpt(string const& name, string const& opts, T defaultValue);
+	//static bool getBool(string const& name, bool defaultValue);
+	//static int getInt(string const& name, int min, int max, int defaultValue, ImGuiSliderFlags_ flags = ImGuiSliderFlags_::ImGuiSliderFlags_None);
+	//static float getFloat(string const& name, float min, float max, float defaultValue, ImGuiSliderFlags_ flags_ flags = ImGuiSliderFlags_::ImGuiSliderFlags_None);
 	static void begin();
 	static void end();
 };
-
-#define GETFLOAT(name, opts, defaultValue) float name = cfg2::cfg2<float>(#name, opts, defaultValue);
-#define GETINT(name, opts, defaultValue) int name = cfg2::cfg2<int>(#name, opts, defaultValue);
-#define GETBOOL(name, opts, defaultValue) bool name = cfg2::cfg2<bool>(#name, opts, defaultValue);

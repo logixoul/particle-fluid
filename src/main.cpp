@@ -207,9 +207,12 @@ struct SApp : ci::app::App {
 	}
 	void stefanDraw()
 	{
-		float blurSize = cfg2::getOpt("blurSize", "", 1.0f);
-		int blurIters = cfg2::getOpt("blurIters", "", 4.0f);
-		float blurMul = cfg2::getOpt("blurMul", "", 20.2f);
+		static float blurSize = 100;
+		ImGui::DragFloat("blurSize", &blurSize, 1.0f, 0.1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
+		static int blurIters = 4;
+		ImGui::DragInt("blurIters", &blurIters, 1.0f, 1, 16, "%d", ImGuiSliderFlags_None);
+		static float blurMul = 200;
+		ImGui::DragFloat("blurMul", &blurMul, 1.0f, 1, 2000, "%.3f", ImGuiSliderFlags_Logarithmic);
 		const float bloomSize = 1.0f;
 		const int bloomIters = 4.0f;
 		const float bloomIntensity = 0.2f;
@@ -313,20 +316,18 @@ struct SApp : ci::app::App {
 			doFluidStep();
 
 		} // if ! pause
+		vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 		if (mouseDown_[0])
 		{
-			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 			float t = getElapsedFrames();
 
 			Particle part; part.pos = scaledm + vec2(sin(t), cos(t)) * 30.0f;
 			particles.push_back(part);
 		}
 		else if (mouseDown_[2]) {
-			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
 			for (Particle& part : particles) {
-				if (distance(part.pos, scaledm) < 100)
-					part.velocity += 40.0f * direction / (float)::scale;
-				cout << direction << endl;
+				if (distance(part.pos, scaledm) < 40)
+					part.velocity += 200.0f * direction / (float)::scale;
 			}
 		}
 	}
