@@ -209,11 +209,11 @@ struct SApp : ci::app::App {
 	{
 		float blurSize = cfg2::getOpt("blurSize", "", 1.0f);
 		int blurIters = cfg2::getOpt("blurIters", "", 4.0f);
-		float blurMul = cfg2::getOpt("blurMul", "", 0.2f);
+		float blurMul = cfg2::getOpt("blurMul", "", 20.2f);
 		const float bloomSize = 1.0f;
 		const int bloomIters = 4.0f;
 		const float bloomIntensity = 0.2f;
-		cout << blurMul << endl;
+		cout << particles.size() << endl;
 
 		gl::clear(Color(0, 0, 0));
 
@@ -322,23 +322,11 @@ struct SApp : ci::app::App {
 			particles.push_back(part);
 		}
 		else if (mouseDown_[2]) {
-			mm();
 			vec2 scaledm = vec2(mouseX * (float)sx, mouseY * (float)sy);
-			Area a(scaledm, scaledm);
-			int r = 15;
-			a.expand(r, r);
-			for (int x = a.x1; x <= a.x2; x++)
-			{
-				for (int y = a.y1; y <= a.y2; y++)
-				{
-					vec2 v = vec2(x, y) - scaledm;
-					float w = std::max(0.0f, 1.0f - length(v) / r);
-					w = 3 * w * w - 2 * w * w * w;
-					for (Particle& part : particles) {
-						if (distance(part.pos, v) < 10)
-							part.velocity += 4.0f * direction / (float)::scale;
-					}
-				}
+			for (Particle& part : particles) {
+				if (distance(part.pos, scaledm) < 100)
+					part.velocity += 40.0f * direction / (float)::scale;
+				cout << direction << endl;
 			}
 		}
 	}
