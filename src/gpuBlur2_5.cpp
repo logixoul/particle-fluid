@@ -78,20 +78,44 @@ namespace gpuBlur2_5 {
 		}
 		static bool oldAccumulateImpl = true;
 		ImGui::Checkbox("oldAccumulateImpl", &oldAccumulateImpl);
-		if (oldAccumulateImpl) {
+		if (false) {
 			for (int i = lvls - 1; i > 0; i--) {
 				auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
 				//float w = pow(lvlmul, float(i)); // copy-pasted
+				/*cout << "[i=" << i << "] size1=" << zoomstates[i - 1]->getSize()
+					<< " size2=" << upscaled->getSize() << ". The two should match." << endl;*/
 				zoomstates[i - 1] = shade2(zoomstates[i - 1], upscaled,
 					"vec3 acc = fetch3(tex);"
 					"vec3 nextzoom = fetch3(tex2);"
-					"vec3 c = /*acc +*/ nextzoom * _mul;"
+					"vec3 c = nextzoom * _mul;"
 					"_out.rgb = c;"
 					, ShadeOpts().uniform("_mul", /*w*/1.0f).scope("gpuBlur2_5::addUpscaled")
 				);
 			}
 		}
 		else {
+			for (int i = lvls - 1; i > 0; i--) {
+				auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
+				//float w = pow(lvlmul, float(i)); // copy-pasted
+				auto result1 = shade_dbg({ upscaled , zoomstates[i - 1] },
+					"void shade() {"
+					"vec3 nextzoom = fetch3(tex);"
+					"vec3 c = fetch3(tex2) * 0.01 + nextzoom * _mul;"
+					"_out.rgb = c;"
+					"}"
+					, ShadeOpts().uniform("_mul", /*w*/1.0f).scope("gpuBlur2_5::addUpscaled[result1]")
+				);
+				auto result2 = shade_dbg({ zoomstates[i - 1] , upscaled },
+					"void shade() {"
+					"vec3 nextzoom = fetch3(tex2);"
+					"vec3 c = fetch3(tex) * 0.01 + nextzoom * _mul;"
+					"_out.rgb = c;"
+					"}"
+					, ShadeOpts().uniform("_mul", /*w*/1.0f).scope("gpuBlur2_5::addUpscaled[result2]")
+				);
+				zoomstates[i - 1] = oldAccumulateImpl ? result2 : result1;
+		}
+#if 0
 			for (int i = lvls - 1; i > 0; i--) {
 				auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
 				//float w = pow(lvlmul, float(i)); // copy-pasted
@@ -102,6 +126,7 @@ namespace gpuBlur2_5 {
 					, ShadeOpts().uniform("_mul", /*w*/1.0f).scope("gpuBlur2_5::addUpscaled")
 				);
 			}
+#endif
 		}
 
 		//return upscale(zoomstates[lvls-1], zoomstates[0]->getSize());

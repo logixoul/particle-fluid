@@ -357,3 +357,156 @@ ShadeOpts::ShadeOpts() {
 	//_ifmt=GL_RGBA16F;
 	_scaleX = _scaleY = 1.0f;
 }
+
+gl::TextureRef shade_dbg(vector<gl::TextureRef> const& texv, std::string const& fshader, ShadeOpts const& opts)
+{
+	shared_ptr<GpuScope> gpuScope;
+	if (opts._scopeName != "") {
+		gpuScope = make_shared<GpuScope>(opts._scopeName);
+	}
+	//const string fshader = "void shade() { }";
+	static std::mutex mapMutex;
+	unique_lock<std::mutex> ul(mapMutex);
+	static std::map<string, gl::GlslProgRef> shaders;
+	gl::GlslProgRef shader;
+	if (shaders.find(fshader) == shaders.end())
+	{
+		string uniformDeclarations;
+		std::string completeFshader = getCompleteFshader(texv, opts._uniforms, fshader, &uniformDeclarations);
+		string completeVshader = Str()
+			<< "#version 150"
+			<< "#extension GL_ARB_explicit_uniform_location : enable"
+			//<< "#extension GL_ARB_shader_image_load_store : enable"
+			<< "in vec4 ciPosition;"
+			<< "in vec2 ciTexCoord0;"
+			<< "out highp vec2 tc;"
+			<< "out highp vec2 relOutTc;" // relative out texcoord
+			<< "uniform vec2 uTexCoordOffset, uTexCoordScale;"
+			<< uniformDeclarations
+
+			<< "void main()"
+			<< "{"
+			<< "	gl_Position = ciPosition * 2 - 1;"
+			<< "	tc = ciTexCoord0;"
+			<< "	relOutTc = tc;"
+			<< "	tc = uTexCoordOffset + uTexCoordScale * tc;"
+			<< opts._vshaderExtra
+			<< "}";
+		try {
+			auto fmt = gl::GlslProg::Format()
+				.vertex(completeVshader)
+				.fragment(completeFshader)
+				.attribLocation("ciPosition", 0)
+				.attribLocation("ciTexCoord0", 1)
+				.preprocess(false)
+				;
+			shader = gl::GlslProg::create(fmt);
+			shaders[fshader] = shader;
+		}
+		catch (gl::GlslProgCompileExc const& e) {
+			cout << "gl::GlslProgCompileExc: " << e.what() << endl;
+			cout << "source:" << endl;
+			cout << completeFshader << endl;
+			string s; cin >> s;
+			throw;
+		}
+	}
+	else {
+		shader = shaders[fshader];
+	}
+	auto tex0 = texv[0];
+	auto prevGlslProg = gl::Context::getCurrent()->getGlslProg();
+	//glUseProgram(shader->getHandle());
+	//gl::Context::getCurrent()->bindGlslProg(shader);
+	if (shader->getHandle() == 0) {
+		cout << "hey" << endl;
+	}
+	shader->bind();
+	//glUseProgram(shader->getHandle());
+	ivec2 viewportSize(
+		floor(tex0->getWidth() * opts._scaleX),
+		floor(tex0->getHeight() * opts._scaleY)
+	);
+
+	if (opts._dstRectSize != ivec2()) {
+		viewportSize = opts._dstRectSize;
+	}
+	vector<gl::TextureRef> results;
+	if (opts._enableResult) {
+		if (opts._targetTexs.size() != 0)
+		{
+			results = opts._targetTexs;
+		}
+		else {
+			GLenum ifmt = opts._ifmt.exists ? opts._ifmt.val : tex0->getInternalFormat();
+			results = { maketex(viewportSize.x, viewportSize.y, ifmt) };
+		}
+	}
+
+	int location = 0;
+	shader->uniform("viewportSize", viewportSize);
+	location++;
+	shader->uniform("mouse", vec2(mouseX, mouseY));
+	//::setUniform(location++, vec2(result->getSize()));
+	shader->uniform("tex", 0); bindTexture(tex0, GL_TEXTURE0 + 0);
+	shader->uniform("texSize", vec2(tex0->getSize()));
+	shader->uniform("tsize", vec2(1.0) / vec2(tex0->getSize()));
+	for (int i = 1; i < texv.size(); i++) {
+		//shader.
+		//string index = texIndex(texv[i]);
+		shader->uniform(samplerName(i), i); bindTexture(texv[i], GL_TEXTURE0 + i);
+		shader->uniform(samplerName(i) + "Size", vec2(texv[i]->getSize()));
+		shader->uniform("tsize" + samplerSuffix(i), vec2(1) / vec2(texv[i]->getSize()));
+	}
+	for (auto& uniform : opts._uniforms)
+	{
+		uniform.setter(shader);
+	}
+	/*shader->uniform("image", 0); // todo: rm this?
+	if (opts._targetImg != nullptr) {
+		my_assert(opts._targetImg->getInternalFormat() == GL_R32F);
+		glBindImageTexture(0, opts._targetImg->getId(), 0, GL_FALSE, 0, GL_READ_WRITE, opts._targetImg->getInternalFormat());
+	}*/
+	auto srcArea = opts._area;
+	if (srcArea == Area::zero()) {
+		srcArea = tex0->getBounds();
+	}
+	tex0->setTopDown(true);
+	Rectf texRect = tex0->getAreaTexCoords(srcArea);
+	tex0->setTopDown(false);
+	shader->uniform("uTexCoordOffset", texRect.getUpperLeft());
+	shader->uniform("uTexCoordScale", texRect.getSize());
+
+	//glUseProgram(shader->getHandle()); // we did this further up, but the ->uniform calls have messed it up
+	shader->bind();
+
+	if (opts._enableResult) {
+		beginRTT(results);
+	}
+	else {
+		// if we don't do that, OpenGL clamps the viewport (that we set) by the cinder window size
+		beginRTT(opts._targetImg);
+
+		glColorMask(false, false, false, false);
+	}
+
+	gl::pushMatrices();
+	{
+		gl::ScopedViewport sv(opts._dstPos, viewportSize);
+		gl::setMatricesWindow(ivec2(1, 1), true);
+		::drawRect();
+		gl::popMatrices();
+	}
+	if (opts._enableResult) {
+		endRTT();
+	}
+	else {
+		endRTT();
+		glColorMask(true, true, true, true);
+	}
+	//glUseProgram(0); // as in gl::Context::pushGlslProg
+	//gl::Context::getCurrent()->bindGlslProg(prevGlslProg);
+	//glUseProgram(prevGlslProg->getHandle());
+	prevGlslProg->bind();
+	return results[0];
+}

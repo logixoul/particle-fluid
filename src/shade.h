@@ -121,3 +121,5 @@ struct ShadeOpts
 
 gl::TextureRef shade(vector<gl::TextureRef> const& texv, std::string const& fshader, ShadeOpts const& opts=ShadeOpts());
 inline gl::TextureRef shade(vector<gl::TextureRef> const& texv, std::string const& fshader, float resScale);
+
+gl::TextureRef shade_dbg(vector<gl::TextureRef> const& texv, std::string const& fshader, ShadeOpts const& opts = ShadeOpts());
