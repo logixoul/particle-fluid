@@ -462,20 +462,15 @@ gl::TextureRef shade_dbg(vector<gl::TextureRef> const& texv, std::string const& 
 	{
 		uniform.setter(shader);
 	}
-	/*shader->uniform("image", 0); // todo: rm this?
-	if (opts._targetImg != nullptr) {
-		my_assert(opts._targetImg->getInternalFormat() == GL_R32F);
-		glBindImageTexture(0, opts._targetImg->getId(), 0, GL_FALSE, 0, GL_READ_WRITE, opts._targetImg->getInternalFormat());
-	}*/
 	auto srcArea = opts._area;
 	if (srcArea == Area::zero()) {
 		srcArea = tex0->getBounds();
 	}
-	tex0->setTopDown(true);
-	Rectf texRect = tex0->getAreaTexCoords(srcArea);
-	tex0->setTopDown(false);
-	shader->uniform("uTexCoordOffset", texRect.getUpperLeft());
-	shader->uniform("uTexCoordScale", texRect.getSize());
+	//tex0->setTopDown(true);
+	//Rectf texRect = tex0->getAreaTexCoords(srcArea);
+	//tex0->setTopDown(false);
+	shader->uniform("uTexCoordOffset", vec2(0.0,0.0));
+	shader->uniform("uTexCoordScale", vec2(1.0, 1.0));
 
 	//glUseProgram(shader->getHandle()); // we did this further up, but the ->uniform calls have messed it up
 	shader->bind();
