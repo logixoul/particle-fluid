@@ -19,7 +19,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "precompiled.h"
 #include "shade.h"
-#include "util.h"
 #include "stuff.h"
 #include "stefanfw.h"
 
@@ -88,9 +87,9 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, vector<Unifor
 	};
 	stringstream uniformDeclarations;
 	int location = 0;
-	uniformDeclarations << "layout(location=" << location++ << ") uniform ivec2 viewportSize;\n";
-	uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 mouse;\n";
-	//uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 resultSize;\n";
+	uniformDeclarations << "uniform ivec2 viewportSize;\n";
+	uniformDeclarations << "uniform vec2 mouse;\n";
+	//uniformDeclarations << "uniform vec2 resultSize;\n";
 	//uniformDeclarations << "vec2 my_FragCoord;\n";
 	for(int i = 0; i < texv.size(); i++)
 	{
@@ -98,13 +97,13 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, vector<Unifor
 		GLenum fmt, type;
 		texv[i]->getInternalFormatInfo(texv[i]->getInternalFormat(), &fmt, &type);
 		if (type == GL_UNSIGNED_INT) samplerType = "usampler2D";
-		uniformDeclarations << "layout(location=" << location++ << ") uniform " + samplerType + " " + samplerName(i) + ";\n";
-		uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 " + samplerName(i) + "Size;\n";
-		uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 tsize" + samplerSuffix(i) + ";\n";
+		uniformDeclarations << "uniform " + samplerType + " " + samplerName(i) + ";\n";
+		uniformDeclarations << "uniform vec2 " + samplerName(i) + "Size;\n";
+		uniformDeclarations << "uniform vec2 tsize" + samplerSuffix(i) + ";\n";
 	}
 	for (auto& p : uniforms)
 	{
-		uniformDeclarations << "layout(location=" << location++ << ") uniform " + p.shortDecl + ";\n";
+		uniformDeclarations << "uniform " + p.shortDecl + ";\n";
 	}
 	//uniformDeclarations << "layout(binding=0, r32f) uniform coherent image2D image;";
 	*uniformDeclarationsRet = uniformDeclarations.str();
@@ -323,6 +322,7 @@ gl::TextureRef shade(vector<gl::TextureRef> const& texv, std::string const& fsha
 	{
 		gl::ScopedViewport sv(opts._dstPos, viewportSize);
 		gl::setMatricesWindow(ivec2(1, 1), true);
+		gl::disableAlphaBlending();
 		::drawRect();
 		gl::popMatrices();
 	}

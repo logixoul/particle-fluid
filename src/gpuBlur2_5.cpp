@@ -52,6 +52,7 @@ namespace gpuBlur2_5 {
 		lvls = std::min(lvls, maxLvls);
 		for (int i = 0; i < lvls; i++) {
 			float w = pow(lvlmul, float(i));
+			w += 1.0f;
 			weights.push_back(w);
 			sumw += w;
 		}
@@ -75,12 +76,13 @@ namespace gpuBlur2_5 {
 		}
 		for (int i = lvls - 1; i > 0; i--) {
 			auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
+			float w = pow(lvlmul, float(i)); // tmp copypaste
 			zoomstates[i - 1] = shade2(zoomstates[i - 1], upscaled,
 				"vec3 acc = fetch3(tex);"
 				"vec3 nextzoom = fetch3(tex2);"
 				"vec3 c = acc + nextzoom * _mul;"
 				"_out.rgb = c;"
-				, ShadeOpts().uniform("_mul", lvlmul)
+				, ShadeOpts().uniform("_mul", w)
 			);
 		}
 		return zoomstates[0];

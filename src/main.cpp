@@ -207,28 +207,36 @@ struct SApp : ci::app::App {
 	}
 	void stefanDraw()
 	{
-		static float blurSize = 100;
+		static float blurSize = 1.41f;
 		ImGui::DragFloat("blurSize", &blurSize, 1.0f, 0.1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
-		static int blurIters = 4;
+		static int blurIters = 5;
 		ImGui::DragInt("blurIters", &blurIters, 1.0f, 1, 16, "%d", ImGuiSliderFlags_None);
-		static float blurMul = 200;
-		ImGui::DragFloat("blurMul", &blurMul, 1.0f, 1, 2000, "%.3f", ImGuiSliderFlags_Logarithmic);
-		const float bloomSize = 1.0f;
-		const int bloomIters = 4.0f;
-		const float bloomIntensity = 0.2f;
-		cout << particles.size() << endl;
-
+		static float gradScale = 1.68;
+		ImGui::DragFloat("gradScale", &gradScale, 1.0f, 1, 2000, "%.3f", ImGuiSliderFlags_Logarithmic);
+		static float bloomSize = 1.5f;
+		static int bloomIters = 6.0f;
+		static float bloomIntensity = 0.07f;
+		ImGui::DragFloat("bloomSize", &bloomSize, 1.0f, 0.1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
+		ImGui::DragInt("bloomIters", &bloomIters, 1.0f, 1, 16, "%d", ImGuiSliderFlags_None);
+		ImGui::DragFloat("bloomIntensity", &bloomIntensity, 1.0f, 0.0001, 2000, "%.3f", ImGuiSliderFlags_Logarithmic);
+		
 		gl::clear(Color(0, 0, 0));
 
 		gl::setMatricesWindow(getWindowSize(), false);
 		auto img = Array2D<float>(sz);
 		for (auto& particle : particles) {
-			aaPoint<float, WrapModes::GetClamped>(img, particle.pos, 10 * blurMul);
+			aaPoint<float, WrapModes::GetClamped>(img, particle.pos, 47);
 		}
 		
 		auto tex = gtex(img);
 		tex = gpuBlur2_5::run_longtail(tex, blurIters, blurSize);
-		auto redTex = gtex(img);
+		auto thresholdedTex = shade2(tex,
+			"float f = fetch1();"
+			"float fw = fwidth(f);"
+			"f = smoothstep(0.5-fw/2, 0.5+fw/2, f);"
+			"_out.r = f;");
+
+		auto redTex = thresholdedTex;
 		
 		auto redTexB = gpuBlur2_5::run_longtail(redTex, bloomIters, bloomSize);
 		
@@ -248,20 +256,22 @@ struct SApp : ci::app::App {
 		auto grads = get_gradients_tex(tex);
 
 		auto tex2 = shade2(tex, grads, envMap, redTex, /*greenTex,*/
-			"vec2 grad = fetch2(tex2);"
+			"vec2 grad = fetch2(tex2) * gradScale;"
 			"vec3 N = normalize(vec3(-grad.x, -grad.y, -1.0));"
 			"vec3 I=-normalize(vec3(tc.x-.5, tc.y-.5, 1.0));"
 			"float eta=1.0/1.3;"
 			"vec3 R=refract(I, N, eta);"
 			"vec3 c = getEnv(R);"
+			"c*=0.2;"
 			//"vec3 c = N;"
 			"vec3 albedo = 0.0*vec3(0.005, 0.0, 0.0);"
-			"c = mix(albedo, c, pow(.9, fetch1(tex) * 50.0));" // tmp
+			//"c = mix(albedo, c, pow(.9, fetch1(tex) * 50.0));" // tmp
 			"R = reflect(I, N);"
-			"if(fetch1(tex) > surfTensionThres)"
-			"	c += getEnv(R) * 5.0;" // mul to tmp simulate one side of the envmap being brighter than the other
+			//"if(fetch1(tex) > surfTensionThres)"
+			//"	c += getEnv(R)*0.2;" // mul to tmp simulate one side of the envmap being brighter than the other
 
 			"float redVal = fetch1(tex4);"
+			//"redVal/=redVal+1.0;" // reinhard
 			//"float greenVal = fetch1(tex5);"
 			// this is taken from https://www.shadertoy.com/view/Mld3Rn
 			"vec3 redColor = vec3(min(redVal * 1.5, 1.), pow(redVal, 2.5), pow(redVal, 12.)); "
@@ -270,7 +280,7 @@ struct SApp : ci::app::App {
 			//"c += greenColor;"
 
 			"_out.rgb = c;"
-			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", 0.1f),
+			, ShadeOpts().ifmt(GL_RGB16F).scale(4.0f).uniform("surfTensionThres", 0.1f).uniform("gradScale", gradScale),
 			"float PI = 3.14159265358979323846264;\n"
 			"vec2 latlong(vec3 v) {\n"
 			"v = v.xzy;\n"
@@ -296,14 +306,14 @@ struct SApp : ci::app::App {
 			"_out.rgb = c;"
 		);
 
-		tex2 = tex;
+		/*tex2 = tex;
 		tex2 = shade2(tex2,
 			"float f = fetch1();"
 			"float fw = fwidth(f);"
 			"f = smoothstep(0.5-fw/2, 0.5+fw/2, f);"
 			//"f = dFdx(f)+dFdy(f);"
 			"_out.rgb = vec3(f);"
-			, ShadeOpts().ifmt(GL_RGB16F));
+			, ShadeOpts().ifmt(GL_RGB16F));*/
 
 		//videoWriter->write(tex2);
 		
@@ -326,8 +336,13 @@ struct SApp : ci::app::App {
 		}
 		else if (mouseDown_[2]) {
 			for (Particle& part : particles) {
-				if (distance(part.pos, scaledm) < 40)
-					part.velocity += 200.0f * direction / (float)::scale;
+				if (distance(part.pos, scaledm) < 40) {
+					const float velocityScaleFactor = 2000.0f / (float)::scale;
+					part.velocity += velocityScaleFactor * direction;
+					float speed = glm::length(part.velocity);
+					float newSpeed = std::min(speed, velocityScaleFactor * 10);
+					part.velocity = part.velocity * newSpeed / speed;
+				}
 			}
 		}
 	}
