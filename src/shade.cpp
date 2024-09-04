@@ -59,6 +59,9 @@ void beginRTT(vector<gl::TextureRef> fbotexs)
 }
 void endRTT()
 {
+	cout << "todo rm the next line" << endl;
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + 0, GL_TEXTURE_2D, 0, 0);
+
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	fboBound = false;
 }
@@ -88,9 +91,9 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, vector<Unifor
 	};
 	stringstream uniformDeclarations;
 	int location = 0;
-	uniformDeclarations << "layout(location=" << location++ << ") uniform ivec2 viewportSize;\n";
-	uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 mouse;\n";
-	//uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 resultSize;\n";
+	uniformDeclarations << "uniform ivec2 viewportSize;\n";
+	uniformDeclarations << "uniform vec2 mouse;\n";
+	//uniformDeclarations << "uniform vec2 resultSize;\n";
 	//uniformDeclarations << "vec2 my_FragCoord;\n";
 	for(int i = 0; i < texv.size(); i++)
 	{
@@ -98,13 +101,13 @@ std::string getCompleteFshader(vector<gl::TextureRef> const& texv, vector<Unifor
 		GLenum fmt, type;
 		texv[i]->getInternalFormatInfo(texv[i]->getInternalFormat(), &fmt, &type);
 		if (type == GL_UNSIGNED_INT) samplerType = "usampler2D";
-		uniformDeclarations << "layout(location=" << location++ << ") uniform " + samplerType + " " + samplerName(i) + ";\n";
-		uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 " + samplerName(i) + "Size;\n";
-		uniformDeclarations << "layout(location=" << location++ << ") uniform vec2 tsize" + samplerSuffix(i) + ";\n";
+		uniformDeclarations << "uniform " + samplerType + " " + samplerName(i) + ";\n";
+		uniformDeclarations << "uniform vec2 " + samplerName(i) + "Size;\n";
+		uniformDeclarations << "uniform vec2 tsize" + samplerSuffix(i) + ";\n";
 	}
 	for (auto& p : uniforms)
 	{
-		uniformDeclarations << "layout(location=" << location++ << ") uniform " + p.shortDecl + ";\n";
+		uniformDeclarations << "uniform " + p.shortDecl + ";\n";
 	}
 	//uniformDeclarations << "layout(binding=0, r32f) uniform coherent image2D image;";
 	*uniformDeclarationsRet = uniformDeclarations.str();
@@ -466,25 +469,14 @@ gl::TextureRef shade_dbg(vector<gl::TextureRef> const& texv, std::string const& 
 	if (srcArea == Area::zero()) {
 		srcArea = tex0->getBounds();
 	}
-	//tex0->setTopDown(true);
-	//Rectf texRect = tex0->getAreaTexCoords(srcArea);
-	//tex0->setTopDown(false);
 	shader->uniform("uTexCoordOffset", vec2(0.0,0.0));
 	shader->uniform("uTexCoordScale", vec2(1.0, 1.0));
 
 	//glUseProgram(shader->getHandle()); // we did this further up, but the ->uniform calls have messed it up
 	shader->bind();
 
-	if (opts._enableResult) {
-		beginRTT(results);
-	}
-	else {
-		// if we don't do that, OpenGL clamps the viewport (that we set) by the cinder window size
-		beginRTT(opts._targetImg);
-
-		glColorMask(false, false, false, false);
-	}
-
+	beginRTT(results);
+	
 	gl::pushMatrices();
 	{
 		gl::ScopedViewport sv(opts._dstPos, viewportSize);
@@ -492,16 +484,7 @@ gl::TextureRef shade_dbg(vector<gl::TextureRef> const& texv, std::string const& 
 		::drawRect();
 		gl::popMatrices();
 	}
-	if (opts._enableResult) {
-		endRTT();
-	}
-	else {
-		endRTT();
-		glColorMask(true, true, true, true);
-	}
-	//glUseProgram(0); // as in gl::Context::pushGlslProg
-	//gl::Context::getCurrent()->bindGlslProg(prevGlslProg);
-	//glUseProgram(prevGlslProg->getHandle());
+	endRTT();
 	prevGlslProg->bind();
 	return results[0];
 }
