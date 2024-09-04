@@ -6,7 +6,6 @@
 #include "gpuBlur2_5.h"
 #include "stefanfw.h"
 #include "Array2D_imageProc.h"
-#include "cfg1.h"
 #include "CrossThreadCallQueue.h"
 #include "cfg2.h"
 #include "IntegratedConsole.h"
@@ -205,29 +204,55 @@ struct SApp : ci::app::App {
 		direction = vec2(getMousePos()) - lastm;
 		lastm = getMousePos();
 	}
+	gl::TextureRef gtex32f(Array2D<float> a) // tmp
+	{
+		gl::TextureRef tex = maketex(a.w, a.h, GL_R32F);
+		bind(tex);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, a.w, a.h, GL_RED, GL_FLOAT, a.data);
+		return tex;
+	}
 	void stefanDraw()
 	{
-		static float blurSize = 100;
-		ImGui::DragFloat("blurSize", &blurSize, 1.0f, 0.1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
-		static int blurIters = 4;
-		ImGui::DragInt("blurIters", &blurIters, 1.0f, 1, 16, "%d", ImGuiSliderFlags_None);
-		static float blurMul = 200;
-		ImGui::DragFloat("blurMul", &blurMul, 1.0f, 1, 2000, "%.3f", ImGuiSliderFlags_Logarithmic);
+		static float metaballLvlMul = 1;
+		ImGui::DragFloat("metaballLvlMul", &metaballLvlMul, 0.1f, 0.000001, 200, "%.3f", ImGuiSliderFlags_Logarithmic);
+		static int metaballIters = 4;
+		ImGui::DragInt("metaballIters", &metaballIters, 1.0f, 1, 16, "%d", ImGuiSliderFlags_None);
+		static float metaballBoost = 1000;
+		ImGui::DragFloat("metaballBoost", &metaballBoost, 1.0f, 1, 1000, "%.3f", ImGuiSliderFlags_Logarithmic);
 		const float bloomSize = 1.0f;
 		const int bloomIters = 4.0f;
 		const float bloomIntensity = 0.2f;
-		cout << particles.size() << endl;
-
+		
 		gl::clear(Color(0, 0, 0));
 
 		gl::setMatricesWindow(getWindowSize(), false);
 		auto img = Array2D<float>(sz);
 		for (auto& particle : particles) {
-			aaPoint<float, WrapModes::GetClamped>(img, particle.pos, 10 * blurMul);
+			aaPoint<float, WrapModes::GetClamped>(img, particle.pos, metaballBoost);
 		}
+
+		//::mm("img", img);
 		
-		auto tex = gtex(img);
-		tex = gpuBlur2_5::run_longtail(tex, blurIters, blurSize);
+		auto tex = gtex32f(img);
+		tex = gpuBlur2_5::run_longtail(tex, metaballIters, metaballLvlMul);
+		/*tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);
+		tex = ::gauss3tex(tex);*/
+#if 0
 		auto redTex = gtex(img);
 		
 		auto redTexB = gpuBlur2_5::run_longtail(redTex, bloomIters, bloomSize);
@@ -296,11 +321,12 @@ struct SApp : ci::app::App {
 			"_out.rgb = c;"
 		);
 
-		tex2 = tex;
+#endif
+		auto tex2 = tex;
 		tex2 = shade2(tex2,
 			"float f = fetch1();"
 			"float fw = fwidth(f);"
-			"f = smoothstep(0.5-fw/2, 0.5+fw/2, f);"
+			//"f = smoothstep(0.00005-fw/2, 0.00005+fw/2, f);"
 			//"f = dFdx(f)+dFdy(f);"
 			"_out.rgb = vec3(f);"
 			, ShadeOpts().ifmt(GL_RGB16F));

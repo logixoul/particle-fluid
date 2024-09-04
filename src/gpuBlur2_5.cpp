@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "gpgpu.h" // for shade2
 #include "gpuBlur2_5.h"
 #include "stefanfw.h"
+#include "CinderImGui.h"
 
 namespace gpuBlur2_5 {
 
@@ -44,7 +45,7 @@ namespace gpuBlur2_5 {
 	}
 
 	gl::TextureRef run_longtail(gl::TextureRef src, int lvls, float lvlmul, float hscale, float vscale) {
-		vector<float> weights;
+		//vector<float> weights;
 		float sumw = 0.0f;
 		int maxHLvls = floor(logAB(1.0f / hscale, (float)src->getWidth()));
 		int maxVLvls = floor(logAB(1.0f / vscale, (float)src->getHeight()));
@@ -52,13 +53,14 @@ namespace gpuBlur2_5 {
 		lvls = std::min(lvls, maxLvls);
 		for (int i = 0; i < lvls; i++) {
 			float w = pow(lvlmul, float(i));
-			weights.push_back(w);
+			//weights.push_back(w);
 			sumw += w;
 		}
-		for (float& w : weights) {
+		cout << "sumw=" << sumw << endl;
+		/*for (float& w : weights) {
 			w /= sumw;
 		}
-		/*cout << "Weights: ";
+		cout << "Weights: ";
 		for(float w: weights) {
 			cout << w << ", ";
 		}
@@ -73,17 +75,21 @@ namespace gpuBlur2_5 {
 			zoomstates.push_back(newZoomstate);
 			if (newZoomstate->getWidth() < 1 || newZoomstate->getHeight() < 1) throw runtime_error("too many blur levels");
 		}
-		for (int i = lvls - 1; i > 0; i--) {
-			auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
-			zoomstates[i - 1] = shade2(zoomstates[i - 1], upscaled,
-				"vec3 acc = fetch3(tex);"
-				"vec3 nextzoom = fetch3(tex2);"
-				"vec3 c = acc + nextzoom * _mul;"
-				"_out.rgb = c;"
-				, ShadeOpts().uniform("_mul", lvlmul)
-			);
+		if (false) {
+			for (int i = lvls - 1; i > 0; i--) {
+				auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
+				float w = pow(lvlmul, float(i)); // copy-pasted
+				zoomstates[i - 1] = shade2(zoomstates[i - 1], upscaled,
+					"vec3 acc = fetch3(tex);"
+					"vec3 nextzoom = fetch3(tex2);"
+					"vec3 c = /*acc +*/ nextzoom * _mul;"
+					"_out.rgb = c;"
+					, ShadeOpts().uniform("_mul", w).scope("gpuBlur2_5::addUpscaled")
+				);
+			}
 		}
-		return zoomstates[0];
+		return upscale(zoomstates[lvls-1], zoomstates[0]->getSize());
+		//return zoomstates[0];
 	}
 	float getGaussW() {
 		// default value determined by trial and error
@@ -96,6 +102,7 @@ namespace gpuBlur2_5 {
 		return upscale(src, float(toSize.x) / src->getWidth(), float(toSize.y) / src->getHeight());
 	}
 	gl::TextureRef upscale(gl::TextureRef src, float hscale, float vscale) {
+		GPU_SCOPE("gpuBlur2_5::upscale");
 		//globaldict["gaussW"] = getGaussW();
 		string lib =
 			"float gauss(float f, float width) {"
@@ -103,7 +110,6 @@ namespace gpuBlur2_5 {
 			"}"
 			;
 		string shader =
-			"	float gaussW = 0.75f;"
 			"	vec2 offset = vec2(GB2_offsetX, GB2_offsetY);"
 			// here tc2 is half a texel TO THE TOP LEFT of the texel center. IT IS IN UV SPACE.
 			"	vec2 tc2 = floor(tc * texSize) / texSize;"
@@ -124,12 +130,14 @@ namespace gpuBlur2_5 {
 			"	w0/=sum;"
 			"	wP1/=sum;"
 			"	_out.rgb = wM1*aM1 + w0*a0 + wP1*aP1;";
+			//"	_out.rgb = fetch3(tex, tc);";
 		setWrapBlack(src);
 		auto hscaled = shade2(src, shader,
 			ShadeOpts()
 				.scale(hscale, 1.0f)
 				.uniform("GB2_offsetX", 1.0f)
 				.uniform("GB2_offsetY", 0.0f)
+				.uniform("gaussW", 0.75f)
 			, lib);
 		setWrapBlack(hscaled);
 		auto vscaled = shade2(hscaled, shader,
@@ -137,14 +145,17 @@ namespace gpuBlur2_5 {
 				.scale(1.0f, vscale)
 				.uniform("GB2_offsetX", 0.0f)
 				.uniform("GB2_offsetY", 1.0f)
+			.uniform("gaussW", 0.75f)
 			, lib);
 		return vscaled;
 	}
 	gl::TextureRef singleblur(gl::TextureRef src, float hscale, float vscale, GLenum wrap) {
-		GPU_SCOPE("singleblur");
+		GPU_SCOPE("gpuBlur2_5::singleblur");
 		//float gaussW = mouseY * 4 + .1;
-		float gaussW = 4;
-		//cout << "2020gauss=" << gaussW<<endl;
+		//float gaussW = 4;
+		static float gaussW = 0.75;
+		ImGui::DragFloat("gaussW", &gaussW, 0.01f, 0.01, 2, "%.3f", ImGuiSliderFlags_Logarithmic);
+		cout << "2024gauss=" << gaussW<<endl;
 		
 		/*float w0 = (mouseY - .5) * .01 + .9958f;
 		float w1 = (1 - w0) /2;*/
