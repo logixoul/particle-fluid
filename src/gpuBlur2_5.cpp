@@ -52,7 +52,8 @@ namespace gpuBlur2_5 {
 		int maxLvls = std::min(maxHLvls, maxVLvls);
 		lvls = std::min(lvls, maxLvls);
 		for (int i = 0; i < lvls; i++) {
-			float w = pow(lvlmul, float(i));
+			//float w = pow(lvlmul, float(i));
+			float w = 1;
 			//weights.push_back(w);
 			sumw += w;
 		}
@@ -75,21 +76,36 @@ namespace gpuBlur2_5 {
 			zoomstates.push_back(newZoomstate);
 			if (newZoomstate->getWidth() < 1 || newZoomstate->getHeight() < 1) throw runtime_error("too many blur levels");
 		}
-		if (false) {
+		static bool oldAccumulateImpl = true;
+		ImGui::Checkbox("oldAccumulateImpl", &oldAccumulateImpl);
+		if (oldAccumulateImpl) {
 			for (int i = lvls - 1; i > 0; i--) {
 				auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
-				float w = pow(lvlmul, float(i)); // copy-pasted
+				//float w = pow(lvlmul, float(i)); // copy-pasted
 				zoomstates[i - 1] = shade2(zoomstates[i - 1], upscaled,
 					"vec3 acc = fetch3(tex);"
 					"vec3 nextzoom = fetch3(tex2);"
 					"vec3 c = /*acc +*/ nextzoom * _mul;"
 					"_out.rgb = c;"
-					, ShadeOpts().uniform("_mul", w).scope("gpuBlur2_5::addUpscaled")
+					, ShadeOpts().uniform("_mul", /*w*/1.0f).scope("gpuBlur2_5::addUpscaled")
 				);
 			}
 		}
-		return upscale(zoomstates[lvls-1], zoomstates[0]->getSize());
-		//return zoomstates[0];
+		else {
+			for (int i = lvls - 1; i > 0; i--) {
+				auto upscaled = upscale(zoomstates[i], zoomstates[i - 1]->getSize());
+				//float w = pow(lvlmul, float(i)); // copy-pasted
+				zoomstates[i - 1] = shade2(upscaled,
+					"vec3 nextzoom = fetch3(tex);"
+					"vec3 c = nextzoom * _mul;"
+					"_out.rgb = c;"
+					, ShadeOpts().uniform("_mul", /*w*/1.0f).scope("gpuBlur2_5::addUpscaled")
+				);
+			}
+		}
+
+		//return upscale(zoomstates[lvls-1], zoomstates[0]->getSize());
+		return zoomstates[0];
 	}
 	float getGaussW() {
 		// default value determined by trial and error
@@ -130,7 +146,6 @@ namespace gpuBlur2_5 {
 			"	w0/=sum;"
 			"	wP1/=sum;"
 			"	_out.rgb = wM1*aM1 + w0*a0 + wP1*aP1;";
-			//"	_out.rgb = fetch3(tex, tc);";
 		setWrapBlack(src);
 		auto hscaled = shade2(src, shader,
 			ShadeOpts()

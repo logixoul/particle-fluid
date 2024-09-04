@@ -218,7 +218,7 @@ struct SApp : ci::app::App {
 		static int metaballIters = 4;
 		ImGui::DragInt("metaballIters", &metaballIters, 1.0f, 1, 16, "%d", ImGuiSliderFlags_None);
 		static float metaballBoost = 1000;
-		ImGui::DragFloat("metaballBoost", &metaballBoost, 1.0f, 1, 1000, "%.3f", ImGuiSliderFlags_Logarithmic);
+		ImGui::DragFloat("metaballBoost", &metaballBoost, 1.0f, 0.0001f, 1000, "%.3f", ImGuiSliderFlags_Logarithmic);
 		const float bloomSize = 1.0f;
 		const int bloomIters = 4.0f;
 		const float bloomIntensity = 0.2f;
